@@ -2,6 +2,9 @@
 This module contains functions for loading various NLP and image processing datasets.
 """
 
+import urllib
+import zipfile
+
 from typing import Tuple
 import os
 
@@ -51,7 +54,16 @@ def load_wikitext103(split: str = "train", cache_dir: str = None):
 def load_enwik8(split: str = "train", cache_dir: str = None):
     """https://huggingface.co/datasets/LTCB/enwik8"""
     if cache_dir is None:
-        cache_dir = os.path.abspath("./datastorage/enwik8/enwik8_data")
+        cache_dir = os.path.abspath("./datastorage/enwik8/enwik8")
+
+    if not os.path.exists(cache_dir):
+        urllib.request.urlretrieve(
+            "http://mattmahoney.net/dc/enwik8.zip", cache_dir + ".zip"
+        )
+        with zipfile.ZipFile(cache_dir + ".zip", "r") as zip_ref:
+            zip_ref.extractall("./datastorage/enwik8")
+        os.remove(cache_dir + ".zip")
+
     with open(cache_dir, "r", encoding="utf-8") as file:
         ds = file.read()
     if split == "train":
