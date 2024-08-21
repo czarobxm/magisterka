@@ -1,6 +1,7 @@
 import argparse
 import hashlib
 import logging
+import os
 import signal
 import time
 
@@ -33,8 +34,12 @@ SPECIAL_TOKENS_DICT = {
     "mask_token": "[MASK]",
 }
 
-NEPTUNE_PROJECT = "mihailovdaniil/transformer"
-NEPTUNE_API_TOKEN = "eyJhcGlfYWRkcm
+try:
+    NEPTUNE_PROJECT = os.environ["NEPTUNE_PROJECT"]
+    NEPTUNE_API_TOKEN = os.environ["NEPTUNE_API_TOKEN"]
+except KeyError:
+    from neptune_config import NEPTUNE_PROJECT, NEPTUNE_API_TOKEN
+
 
 def list_of_strings(arg: str):
     """Convert a comma separated string to a list of strings."""
