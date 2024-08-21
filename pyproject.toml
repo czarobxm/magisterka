@@ -1,0 +1,35 @@
+[tool.black]
+line-length = 90
+
+[tool.pylint]
+max-line-length = 90
+
+[tool.poetry]
+name = "magisterka"
+version = "0.1.0"
+description = ""
+authors = ["Czarek Golecki <czarek.golecki@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+numpy = "^1.26.4"
+matplotlib = "^3.8.3"
+tqdm = "^4.66.2"
+torch = "^2.2.0"
+transformers = "^4.40.1"
+neptune = "^1.10.2"
+einops = "^0.8.0"
+pyarrow = "^17.0.0"
+datasets = "^2.20.0"
+rotary-embedding-torch = "^0.6.4"
+tokenizers = "^0.19.1"
+# pytorch-fast-transformers = "0.4.0" # not working with pep 517, installing independently from source using setup_env.sh
+torchvision = "^0.19.0"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
