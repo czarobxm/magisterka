@@ -71,9 +71,10 @@ class TextGenerationDataset(torch.utils.data.Dataset):
             self.data,
             padding="do_not_pad",
             truncation="do_not_truncate",
+            return_tensors="np",
         )
 
-        data = token_dict["input_ids"]
+        data = token_dict["input_ids"].tolist()
         self.data = [torch.Tensor(sentence) for sentence in data]
         return self.data
 

@@ -72,10 +72,6 @@ def create_dataloaders(args: Namespace, tokenizer: AutoTokenizer):
             device=args.device,
         )
 
-        train_ds.prepare_dataset()
-        val_ds.prepare_dataset()
-        test_ds.prepare_dataset()
-
         train_loader = DataLoader(train_ds, batch_size=args.batch_size)
         val_loader = DataLoader(val_ds, batch_size=args.batch_size)
         test_loader = DataLoader(test_ds, batch_size=args.batch_size)
