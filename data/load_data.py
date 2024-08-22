@@ -58,18 +58,18 @@ def load_wikitext103(split: str = "train", cache_dir: str = None):
 def load_enwik8(split: str = "train", cache_dir: str = None):
     """https://huggingface.co/datasets/LTCB/enwik8"""
     if cache_dir is None:
-        cache_dir = os.path.abspath("./datastorage/enwik8/enwik8")
+        cache_dir = os.path.abspath("./datastorage/enwik8")
     os.makedirs(cache_dir, exist_ok=True)
 
-    if not os.path.exists(cache_dir):
+    if not os.path.exists(cache_dir + "enwik8"):
         urllib.request.urlretrieve(
             "http://mattmahoney.net/dc/enwik8.zip", cache_dir + ".zip"
         )
         with zipfile.ZipFile(cache_dir + ".zip", "r") as zip_ref:
-            zip_ref.extractall("./datastorage/enwik8")
+            zip_ref.extractall(cache_dir)
         os.remove(cache_dir + ".zip")
 
-    with open(cache_dir, "r", encoding="utf-8") as file:
+    with open(cache_dir + "enwik8", "r", encoding="utf-8") as file:
         ds = file.read()
     if split == "train":
         return ds[:90_000_000]
