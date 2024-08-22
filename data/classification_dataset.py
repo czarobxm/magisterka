@@ -87,5 +87,5 @@ class TextClassificationDataset(torch.utils.data.Dataset):
     def to(self, device="mps") -> None:
         """Move data to device"""
         self.texts = self.texts.to(device)
-        self.labels = self.labels.to(device).to(torch.LongTensor)
+        self.labels = self.labels.to(device).type(torch.LongTensor)
         self.attention_masks = self.attention_masks.to(device)
