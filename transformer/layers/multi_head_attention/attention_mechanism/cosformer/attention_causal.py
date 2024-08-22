@@ -62,7 +62,7 @@ def attention_causal_cuda(
     """
     # Compute the normalizers
     denom = 1 / (
-        torch.einsum("nhli,nhli->nhl", query, key.cumsum(1)) + eps
+        torch.einsum("nhli,nhli->nhl", query, key.cumsum(2)) + eps
     )  # [B, Nh, L, Dh], [B, Nh, L, Dh] -> [B, Nh, L]
 
     # Compute the unnormalized result
