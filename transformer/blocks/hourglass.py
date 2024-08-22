@@ -105,6 +105,7 @@ class HourglassBlock(nn.Module):
     def forward(
         self, x: torch.Tensor, causal: bool = True, inference: bool = False
     ) -> torch.Tensor:
+        x = self.shift_right_layers[0](x)
         outputs = []
         for i in range(len(self.decoder_chunks) - 1):
             x = self.decoder_chunks[i](x, causal=causal, inference=inference)

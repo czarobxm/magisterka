@@ -103,8 +103,6 @@ class DecoderOnlyTransformer(BaseModel):
         self.to(device)
 
     def forward(self, x: torch.Tensor, inference: bool = False):
-        # Shift Right
-        x = self.shift_right(x)
         # Embedding
         if self.use_embedding:
             x = self.embedder(x)
