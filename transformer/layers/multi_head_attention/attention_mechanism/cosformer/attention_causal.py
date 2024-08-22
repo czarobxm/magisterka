@@ -92,8 +92,8 @@ def attention_causal(
 
     :return: attention mechanism output, tensor of shape [B, L, Nh, Dh]
     """
-    # if device == "cuda" or device == "cpu":
-    #     return attention_causal_cuda(query, key, value, eps)
+    if device == "cuda" or device == "cpu":
+        return attention_causal_cuda(query, key, value, eps)
 
     out, kv, k_ = (  # pylint: disable=attribute-defined-outside-init
         attention_causal_non_cuda(query, key, value, num_heads, eps, kv, k_)
