@@ -62,12 +62,12 @@ def attention_causal_cuda(
     """
     # Compute the normalizers
     denom = 1 / (
-        torch.einsum("nhli,nhli->nhl", query, key.cumsum(2)) + eps
+        torch.einsum("bnld,bnld->bnl", query, key.cumsum(2)) + eps
     )  # [B, Nh, L, Dh], [B, Nh, L, Dh] -> [B, Nh, L]
 
     # Compute the unnormalized result
     kv_context = causal_dot_product(
-        query, key, value
+        query.contiguous(), key.contiguous(), value.contiguous()
     )  # [B, Nh, L, 2 * Dh], [B, Nh, L, 2 * Dh], [B, Nh, L, Dh] -> [B, Nh, L, Dh]
     attn_output = (
         kv_context * denom[:, :, :, None]
@@ -88,8 +88,7 @@ def attention_causal(
     """
     Causal attention mechanism for the cosformer model.
 
-    :param query: query tensor of size [B, Nh, L, Dh] if self.device is "cuda"
-    or "cpu", or [B * Nh, L, Dh] otherwise
+    :param query: query tensor of size [B, Nh, L, Dh]
 
     :return: attention mechanism output, tensor of shape [B, L, Nh, Dh]
     """

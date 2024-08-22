@@ -35,7 +35,7 @@ def query_key_feature_map(
 ) -> torch.Tensor:
     """
     Compute the query and key feature map for the cosformer attention mechanism.
-    [B, Nh, L, Dh] -> [B, Nh, L, 2 * Dh] or [B * Nh, L, Dh] -> [B * Nh, L, 2 * Dh]
+    [B, Nh, L, Dh] -> [B, Nh, L, 2 * Dh]
     """
     x = torch.cat(
         [
@@ -184,7 +184,7 @@ class Cosformer(BaseAttentionMechanism):
         elif not causal and not inference:
             out = attention_noncausal(q_, k_, value, self.eps)
         else:
-            out = self.inference(q_, k_, value)
+            raise NotImplementedError("Inference is not supported for the cosformer.")
 
         # Undo the multi-head reshape. [B, L, Nh, Dh] -> [B, L, D]
         out = undo_multihead_reshape(out, self.d_model, batch_size, tgt_len)
