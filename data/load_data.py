@@ -69,7 +69,7 @@ def load_enwik8(split: str = "train", cache_dir: str = None):
             zip_ref.extractall(cache_dir)
         os.remove(cache_dir + ".zip")
 
-    with open(cache_dir + "enwik8", "r", encoding="utf-8") as file:
+    with open(cache_dir + "/enwik8", "r", encoding="utf-8") as file:
         ds = file.read()
     if split == "train":
         return ds[:90_000_000]
