@@ -32,6 +32,7 @@ def load_imdb(split: str = "train", cache_dir: str = None):
     """https://huggingface.co/datasets/stanfordnlp/imdb"""
     if cache_dir is None:
         cache_dir = os.path.abspath("./datastorage/imdb")
+    os.makedirs(cache_dir, exist_ok=True)
     if split == "val":
         return None, None
     ds = load_dataset(
@@ -42,6 +43,9 @@ def load_imdb(split: str = "train", cache_dir: str = None):
 
 def load_wikitext103(split: str = "train", cache_dir: str = None):
     """https://huggingface.co/datasets/iohadrubin/wikitext-103-raw-v1"""
+    if cache_dir is None:
+        cache_dir = os.path.abspath("./datastorage/wikitext-103")
+    os.makedirs(cache_dir, exist_ok=True)
     ds = load_dataset(
         "iohadrubin/wikitext-103-raw-v1",
         cache_dir=cache_dir,
@@ -55,6 +59,7 @@ def load_enwik8(split: str = "train", cache_dir: str = None):
     """https://huggingface.co/datasets/LTCB/enwik8"""
     if cache_dir is None:
         cache_dir = os.path.abspath("./datastorage/enwik8/enwik8")
+    os.makedirs(cache_dir, exist_ok=True)
 
     if not os.path.exists(cache_dir):
         urllib.request.urlretrieve(
@@ -79,6 +84,7 @@ def load_cifar10(split: str = "train", cache_dir: str = None):
     """https://huggingface.co/datasets/uoft-cs/cifar10"""
     if cache_dir is None:
         cache_dir = os.path.abspath("./datastorage/cifar10")
+    os.makedirs(cache_dir, exist_ok=True)
     if split == "val":
         return None, None
     ds = load_dataset(
