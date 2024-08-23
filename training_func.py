@@ -45,8 +45,8 @@ def train_one_batch(
     if task == "classification":
         inputs, targets = data[0].to(model.device), data[1].to(model.device)
     if task == "sequence_modelling":
-        inputs = data[:, :-1].to(model.device)
-        targets = data[:, 1:].contiguous().view(-1).to(model.device)
+        inputs = data[:, :-1].to(model.device).detach().clone()
+        targets = data[:, 1:].contiguous().view(-1).to(model.device).detach().clone()
 
     # Make predictions for this batch
     start_fwd = time.time()

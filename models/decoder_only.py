@@ -58,9 +58,6 @@ class DecoderOnlyTransformer(BaseModel):
             device=device,
         )
 
-        # Initial ShiftRight
-        self.shift_right = ShiftRight(shift=1)
-
         # Embedders
         self.embedder = nn.Embedding(self.vocab_size, self.d_model)
 

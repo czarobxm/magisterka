@@ -93,15 +93,9 @@ class AttentionMechanism(nn.Module):
         )
 
         # Apply rotary position encoding
-        if self.apply_rotary_pos_enc and not inference:
+        if self.apply_rotary_pos_enc:
             query = self.rotary_pos_enc.rotate_queries_or_keys(query)
             key = self.rotary_pos_enc.rotate_queries_or_keys(key)
-        elif self.apply_rotary_pos_enc and inference:
-            raise NotImplementedError(
-                "Rotary position encoding is not implemented for inference."
-            )
-        else:
-            pass
 
         # Apply attention mechanism
         return self.attention_mechanism(

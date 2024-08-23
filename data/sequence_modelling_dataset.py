@@ -54,6 +54,7 @@ class TextGenerationDataset(torch.utils.data.Dataset):
             self.tokenize()
             self.slice_sentences()
             self.pad_sentences()
+            self.shuffle()
             self.to(self.device)
 
     def _tolist(self):
@@ -104,4 +105,9 @@ class TextGenerationDataset(torch.utils.data.Dataset):
         self.data = self.tokenizer.pad({"input_ids": self.data}, padding="longest")[
             "input_ids"
         ].to(torch.long)
+        return self.data
+
+    def shuffle(self):
+        """Shuffle the dataset"""
+        self.data = self.data[torch.randperm(len(self.data))]
         return self.data
