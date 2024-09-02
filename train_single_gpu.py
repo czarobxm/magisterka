@@ -79,7 +79,7 @@ parser.add_argument("--max_length", type=int, default=512, help="")
 parser.add_argument("--deepnorm", type=bool, default=True, help="")
 parser.add_argument("--has_outproj", type=bool, default=True, help="")
 parser.add_argument("--act_fun", default="relu", help="")
-parser.add_argument("--apply_rotary_pos_enc", type=bool, default=True, help="")
+parser.add_argument("--apply_rotary_pos_enc", action="store_true", help="")
 parser.add_argument("--norm_before", type=bool, default=True, help="")
 
 # Performer parameters
