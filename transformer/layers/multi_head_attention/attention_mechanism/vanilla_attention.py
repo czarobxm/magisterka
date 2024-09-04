@@ -1,4 +1,5 @@
 from typing import Tuple
+import math
 
 import torch
 from torch import nn
@@ -36,6 +37,21 @@ class VanillaAttention(nn.Module):
         )
         return query, key, value
 
+    def scaled_dot_product_attention(self, query, key, value, causal=False):
+        L, S = query.size(-2), key.size(-2)
+        scale_factor = 1 / math.sqrt(query.size(-1))
+        attn_bias = torch.zeros(L, S, dtype=query.dtype)
+
+        if causal:
+            temp_mask = torch.ones(L, S, dtype=torch.bool).tril(diagonal=0)
+            attn_bias.masked_fill_(temp_mask.logical_not(), float("-inf"))
+            attn_bias.to(query.dtype)
+
+        attn_weight = query @ key.transpose(-2, -1) * scale_factor
+        attn_weight += attn_bias
+        attn_weight = torch.softmax(attn_weight, dim=-1)
+        return attn_weight @ value
+
     def forward(
         self,
         query: torch.Tensor,
@@ -55,9 +71,9 @@ class VanillaAttention(nn.Module):
 
         :return: attention mechanism output
         """
-        output = F.scaled_dot_product_attention(  # pylint: disable=not-callable
-            query, key, value, is_causal=causal
-        )
+        # Scaled dot product attention
+        output = self.scaled_dot_product_attention(query, key, value, causal=causal)
+
         # Undo multi-head reshaping
         output = output.contiguous().view(query.size(0), -1, self.embed_dim)
         return output
