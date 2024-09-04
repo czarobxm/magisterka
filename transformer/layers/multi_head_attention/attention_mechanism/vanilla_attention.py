@@ -40,7 +40,7 @@ class VanillaAttention(nn.Module):
     def scaled_dot_product_attention(self, query, key, value, causal=False):
         L, S = query.size(-2), key.size(-2)
         scale_factor = 1 / math.sqrt(query.size(-1))
-        attn_bias = torch.zeros(L, S, dtype=query.dtype)
+        attn_bias = torch.zeros(L, S, dtype=query.dtype).to(query.device)
 
         if causal:
             temp_mask = torch.ones(L, S, dtype=torch.bool).tril(diagonal=0)
