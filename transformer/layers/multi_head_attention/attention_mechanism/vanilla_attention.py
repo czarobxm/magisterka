@@ -20,21 +20,10 @@ class VanillaAttention(nn.Module):
         value: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         # Multi-head reashaping - Split heads from size [B, L, D] to size: [B, Nh, L, Dh]
-        query = (
-            query.contiguous()
-            .view(query.size(0), -1, self.num_heads, self.head_dim)
-            .transpose(1, 2)
-        )
-        key = (
-            key.contiguous()
-            .view(query.size(0), -1, self.num_heads, self.head_dim)
-            .transpose(1, 2)
-        )
-        value = (
-            value.contiguous()
-            .view(query.size(0), -1, self.num_heads, self.head_dim)
-            .transpose(1, 2)
-        )
+        batch_size = query.size(0)
+        query = query.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
+        key = key.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
+        value = value.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
         return query, key, value
 
     def scaled_dot_product_attention(self, query, key, value, causal=False):
@@ -76,6 +65,8 @@ class VanillaAttention(nn.Module):
         # Scaled dot product attention
         output = self.scaled_dot_product_attention(query, key, value, causal=causal)
 
-        # Undo multi-head reshaping
-        output = output.contiguous().view(query.size(0), -1, self.embed_dim)
+        # Undo multi-head reshaping: [B, Nh, L, Dh] -> [B, L, D]
+        output = (
+            output.transpose(1, 2).contiguous().view(output.size(0), -1, self.embed_dim)
+        )
         return output
