@@ -43,7 +43,9 @@ class VanillaAttention(nn.Module):
         attn_bias = torch.zeros(L, S, dtype=query.dtype).to(query.device)
 
         if causal:
-            temp_mask = torch.ones(L, S, dtype=torch.bool).tril(diagonal=0)
+            temp_mask = (
+                torch.ones(L, S, dtype=torch.bool).tril(diagonal=0).to(query.device)
+            )
             attn_bias.masked_fill_(temp_mask.logical_not(), float("-inf"))
             attn_bias.to(query.dtype)
 
