@@ -216,7 +216,6 @@ class Block(nn.Module):
         inference: bool = False,
     ) -> torch.Tensor:
         """Produces the output of the encoder block."""
-        x = self.shift_right(x)
         for layer in self.layers:
             x = layer(x=x, key_value=key_value, causal=causal, inference=inference)
             if key_value is not None:

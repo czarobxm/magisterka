@@ -65,6 +65,8 @@ class DecoderOnlyTransformer(BaseModel):
         self.pos_enc = PositionalEncoding(
             self.sizes[0], self.d_model, self.pos_enc_type, device=self.device
         )
+        # Shift right
+        self.shift_right = ShiftRight(shift=1)
         # Encoder
         if len(self.n_layers) == len(self.sizes) == 1:
             self.decoder_block = Block(
@@ -100,6 +102,9 @@ class DecoderOnlyTransformer(BaseModel):
         self.to(device)
 
     def forward(self, x: torch.Tensor, inference: bool = False):
+        """Produces the output of the decoder block."""
+        # Shift right
+        x = self.shift_right(x)
         # Embedding
         if self.use_embedding:
             x = self.embedder(x)

@@ -106,16 +106,17 @@ class HourglassBlock(nn.Module):
     def forward(
         self, x: torch.Tensor, causal: bool = True, inference: bool = False
     ) -> torch.Tensor:
+        # Init buffer for residual connections inside the hourglass block
         outputs = []
-        # Initial shift right
-        x = self.initial_shift_right(x)
 
         # Initial decoder chunk
-        x = self.shift_right_layers[0](x)
         x = self.decoder_chunks[0](x, causal=causal, inference=inference)
 
         for i in range(len(self.decoder_chunks) - 1):
             if isinstance(self.down_up_sampling_layers[i], DownsamplingLayer):
+                # 1. Save the output for residual connection
+                # 2. Downsample shifted input
+                # 3. Pass through decoder chunk
                 outputs.append(x)
                 x_downsampled = self.down_up_sampling_layers[i](
                     self.shift_right_layers[i](x)
@@ -124,6 +125,9 @@ class HourglassBlock(nn.Module):
                     x_downsampled, key_value=x, causal=causal, inference=inference
                 )
             else:
+                # 1. Upsample the output from the previous decoder chunk
+                # 2. Upsample the input and add residual connection
+                # 3. Pass through decoder chunk
                 x_prime = outputs.pop(-1)
                 x_upsampled = x_prime + self.down_up_sampling_layers[i](x)
                 x = x_upsampled + self.decoder_chunks[i + 1](

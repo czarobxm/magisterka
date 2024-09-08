@@ -15,6 +15,7 @@ from transformer.layers.multi_head_attention.attention_mechanism.attn_params imp
     PerformerParams,
     CosformerParams,
 )
+from transformer.blocks.utils import ShiftRight
 
 
 class ClassifierTransformer(BaseModel):
@@ -67,6 +68,9 @@ class ClassifierTransformer(BaseModel):
             self.vocab_size, self.d_model, self.pos_enc_type, device=self.device
         )
 
+        # Shift right
+        self.shift_right = ShiftRight(shift=1)
+
         # Encoder
         if len(self.n_layers) == len(self.sizes) == 1:
             self.encoder = Block(
@@ -102,6 +106,9 @@ class ClassifierTransformer(BaseModel):
         self.to(device)
 
     def forward(self, x: torch.Tensor):
+        # Shift right
+        x = self.shift_right(x)
+
         # Embedding
         x = self.embedder(x)
 
@@ -109,7 +116,7 @@ class ClassifierTransformer(BaseModel):
         x = self.pos_enc(x)
 
         # Encoder
-        x = self.encoder(x, causal=True)
+        x = self.encoder(x, causal=False)
 
         # Pooling
         x = x.mean(dim=-2)
