@@ -107,16 +107,18 @@ class HourglassBlock(nn.Module):
         self, x: torch.Tensor, causal: bool = True, inference: bool = False
     ) -> torch.Tensor:
         outputs = []
-
+        # Initial shift right
         x = self.initial_shift_right(x)
 
+        # Initial decoder chunk
         x = self.shift_right_layers[0](x)
         x = self.decoder_chunks[0](x, causal=causal, inference=inference)
+
         for i in range(len(self.decoder_chunks) - 1):
             if isinstance(self.down_up_sampling_layers[i], DownsamplingLayer):
                 outputs.append(x)
                 x_downsampled = self.down_up_sampling_layers[i](
-                    self.shift_right_layers[i + 1](x)
+                    self.shift_right_layers[i](x)
                 )
                 x = self.decoder_chunks[i + 1](
                     x_downsampled, key_value=x, causal=causal, inference=inference
