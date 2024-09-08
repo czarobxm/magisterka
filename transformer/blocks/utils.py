@@ -2,7 +2,6 @@
 
 import torch
 from torch import nn
-import torch.nn.functional as F
 
 
 class DownsamplingLayer(nn.Module):
@@ -59,10 +58,8 @@ class ShiftRight(nn.Module):
             return x
         seq_len = x.size(1)
         if x.ndim == 2:
-            shift_tuple = (self.shift, 0)
-        elif x.ndim >= 2:
-            shift_tuple = (0, 0, self.shift, 0)
+            return torch.nn.ZeroPad2d((1, 0, 0, 0))(x)[:, :seq_len]
+        elif x.ndim == 3:
+            return torch.nn.ZeroPad2d((0, 0, 1, 0))(x)[:, :seq_len]
         else:
             raise ValueError("Input tensor can't be 1D.")
-        x = F.pad(x, shift_tuple, "constant", 0)
-        return x[:, :seq_len]
