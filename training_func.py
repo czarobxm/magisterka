@@ -32,6 +32,15 @@ def log_batch_neptune(
     run["metrics/grad_time"].append(grad_time)
 
 
+def prepare_intputs_and_targets(data: torch.Tensor, task: str, device: str):
+    if task == "classification":
+        inputs, targets = data[0].to(device), data[1].to(device)
+    if task == "sequence_modelling":
+        inputs = data.detach().clone().to(device)
+        targets = data.contiguous().view(-1).to(device).detach().clone()
+    return inputs, targets
+
+
 def train_one_batch(
     data: torch.Tensor,
     model: nn.Module,
@@ -42,11 +51,8 @@ def train_one_batch(
     # Zero your gradients for every batch!
     optimizer.zero_grad()
 
-    if task == "classification":
-        inputs, targets = data[0].to(model.device), data[1].to(model.device)
-    if task == "sequence_modelling":
-        inputs = data[:, :-1].to(model.device).detach().clone()
-        targets = data[:, 1:].contiguous().view(-1).to(model.device).detach().clone()
+    # Prepare inputs and targets
+    inputs, targets = prepare_intputs_and_targets(data, task, model.device)
 
     # Make predictions for this batch
     start_fwd = time.time()
@@ -108,11 +114,8 @@ def train_one_epoch(
 def validation_one_batch(
     data: torch.Tensor, model: nn.Module, loss_fn: nn.Module, task: str
 ):
-    if task == "classification":
-        inputs, targets = data[0].to(model.device), data[1].to(model.device)
-    if task == "sequence_modelling":
-        inputs = data[:, :-1].to(model.device)
-        targets = data[:, 1:].contiguous().view(-1).to(model.device)
+    # Prepare inputs and targets
+    inputs, targets = prepare_intputs_and_targets(data, task, model.device)
 
     # Make predictions for this batch
     outputs = model(inputs)
@@ -204,11 +207,8 @@ def train(
 def evaluate_one_batch(
     data: torch.Tensor, model: nn.Module, loss_fn: nn.Module, task: str
 ):
-    if task == "classification":
-        inputs, targets = data[0].to(model.device), data[1].to(model.device)
-    if task == "sequence_modelling":
-        inputs = data[:, :-1].to(model.device)
-        targets = data[:, 1:].contiguous().view(-1).to(model.device)
+    # Prepare inputs and targets
+    inputs, targets = prepare_intputs_and_targets(data, task, model.device)
 
     outputs = model(inputs)
     outputs = outputs.view(-1, outputs.shape[-1])

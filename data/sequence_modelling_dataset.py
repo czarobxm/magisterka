@@ -82,7 +82,7 @@ class TextGenerationDataset(torch.utils.data.Dataset):
     def slice_sentences(self) -> torch.Tensor:
         """Slice sentences into blocks of max_length"""
         sliced_sentences = []
-        block_length = self.max_length + 1
+        block_length = self.max_length
         last_chunk = None
         for sentence in self.data:
             if last_chunk is not None:

@@ -15,6 +15,7 @@ from transformer.layers.multi_head_attention.attention_mechanism.attn_params imp
 )
 from transformer.layers.multi_head_attention import MultiHeadAttention
 from transformer.layers import FeedForward
+from transformer.blocks.utils import ShiftRight
 
 
 class BlockLayer(nn.Module):
@@ -167,6 +168,8 @@ class Block(nn.Module):
         self.norm_before = norm_before
         self.device = device
 
+        self.shift_right = ShiftRight(shift=1)
+
         self.layers = nn.ModuleList(
             [
                 BlockLayer(
@@ -192,6 +195,8 @@ class Block(nn.Module):
     def forward(
         self, x: torch.Tensor, causal: bool = False, inference: bool = False
     ) -> torch.Tensor:
+        """Produces the output of the encoder block."""
+        x = self.shift_right(x)
         for layer in self.layers:
             x = layer(x, causal=causal, inference=inference)
         if self.has_outproj:

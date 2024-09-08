@@ -71,6 +71,7 @@ class HourglassBlock(nn.Module):
             [UpsamplingLayer(self.d_model, factor) for factor in upsampling_factors]
         )
 
+        self.initial_shift_right = ShiftRight(shift=1)
         self.shift_right_layers = nn.ModuleList(
             [ShiftRight(shift=factor - 1) for factor in downsampling_factors]
         )
@@ -105,6 +106,7 @@ class HourglassBlock(nn.Module):
     def forward(
         self, x: torch.Tensor, causal: bool = True, inference: bool = False
     ) -> torch.Tensor:
+        x = self.initial_shift_right(x)
         x = self.shift_right_layers[0](x)
         outputs = []
         for i in range(len(self.decoder_chunks) - 1):
