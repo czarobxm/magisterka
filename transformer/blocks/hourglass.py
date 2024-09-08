@@ -106,15 +106,26 @@ class HourglassBlock(nn.Module):
     def forward(
         self, x: torch.Tensor, causal: bool = True, inference: bool = False
     ) -> torch.Tensor:
-        x = self.initial_shift_right(x)
-        x = self.shift_right_layers[0](x)
         outputs = []
+
+        x = self.initial_shift_right(x)
+
+        x = self.shift_right_layers[0](x)
+        x = self.decoder_chunks[0](x, causal=causal, inference=inference)
         for i in range(len(self.decoder_chunks) - 1):
-            x = self.decoder_chunks[i](x, causal=causal, inference=inference)
             if isinstance(self.down_up_sampling_layers[i], DownsamplingLayer):
                 outputs.append(x)
-                x = self.down_up_sampling_layers[i](self.shift_right_layers[i](x))
+                x_downsampled = self.down_up_sampling_layers[i](
+                    self.shift_right_layers[i + 1](x)
+                )
+                x = self.decoder_chunks[i + 1](
+                    x_downsampled, key_value=x, causal=causal, inference=inference
+                )
             else:
-                x = self.down_up_sampling_layers[i](x) + outputs.pop(-1)
-        x = self.decoder_chunks[-1](x, causal=causal, inference=inference)
+                x_prime = outputs.pop(-1)
+                x_upsampled = x_prime + self.down_up_sampling_layers[i](x)
+                x = x_upsampled + self.decoder_chunks[i + 1](
+                    x_upsampled, key_value=x_prime, causal=causal, inference=inference
+                )
+
         return x

@@ -94,15 +94,31 @@ class BlockLayer(nn.Module):
         # torch.nn.init.xavier_uniform_(self.norm2.bias)
 
     def forward(
-        self, x: torch.Tensor, causal: bool = False, inference: bool = False
+        self,
+        x: torch.Tensor,
+        key_value: torch.Tensor = None,
+        causal: bool = False,
+        inference: bool = False,
     ) -> torch.Tensor:
         """Produces the output of the single encoder layer."""
         residual = x
         # PreNorm
         if self.norm_before:
             x = self.norm1(x)
+            key_value = self.norm1(key_value) if key_value is not None else None
         # Self Attention
-        x = self.attention(query=x, key=x, value=x, causal=causal, inference=inference)
+        if key_value is not None:
+            x = self.attention(
+                query=x,
+                key=key_value,
+                value=key_value,
+                causal=causal,
+                inference=inference,
+            )
+        else:
+            x = self.attention(
+                query=x, key=x, value=x, causal=causal, inference=inference
+            )
         # Add
         x = self.dropout1(x) + residual
         # PostNorm
@@ -193,12 +209,18 @@ class Block(nn.Module):
         self.to(device)
 
     def forward(
-        self, x: torch.Tensor, causal: bool = False, inference: bool = False
+        self,
+        x: torch.Tensor,
+        key_value: torch.Tensor = None,
+        causal: bool = False,
+        inference: bool = False,
     ) -> torch.Tensor:
         """Produces the output of the encoder block."""
         x = self.shift_right(x)
         for layer in self.layers:
-            x = layer(x, causal=causal, inference=inference)
+            x = layer(x=x, key_value=key_value, causal=causal, inference=inference)
+            if key_value is not None:
+                key_value = None
         if self.has_outproj:
             return self.out_proj(x)
         return x
