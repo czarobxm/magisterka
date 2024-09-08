@@ -189,7 +189,7 @@ def train(
         )
 
         # Evaluate model on validation set
-        model.train(False)
+        model.train(True)
         with torch.no_grad():
             running_vloss = validation_one_epoch(
                 val_loader, model, loss_fn, run, task, running_vloss
