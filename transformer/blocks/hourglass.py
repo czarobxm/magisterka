@@ -122,7 +122,7 @@ class HourglassBlock(nn.Module):
                     self.shift_right_layers[i](x)
                 )
                 x = self.decoder_chunks[i + 1](
-                    x_downsampled, key_value=x, causal=causal, inference=inference
+                    x_downsampled, causal=causal, inference=inference
                 )
             else:
                 # 1. Upsample the output from the previous decoder chunk
