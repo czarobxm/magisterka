@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List, Optional
 
 import torch
 from torch import nn
@@ -39,99 +39,121 @@ class HourglassBlock(nn.Module):
         device: str = "cpu",
     ) -> None:
         super().__init__()
+        super().__init__()
         self.d_model = d_model
-        self.n_layers = n_layers
         self.sizes = sizes
-        self.num_heads = num_heads
-        self.dim_head = d_model // num_heads
-        self.method_params = method_params
-        self.apply_rotary_pos_enc = apply_rotary_pos_enc
-        self.dropout = dropout
-        self.has_outproj = has_outproj
-        self.act_fun = act_fun
-        self.norm_before = norm_before
         self.device = device
 
-        downsampling_factors = []
-        upsampling_factors = []
+        self._validate_inputs(n_layers, sizes)
+
+        self.downsampling_layers, self.upsampling_layers = self._create_sampling_layers()
+        self.shift_right_layers = self._create_shift_right_layers()
+        self.decoder_chunks = self._create_decoder_chunks(
+            n_layers,
+            num_heads,
+            method_params,
+            apply_rotary_pos_enc,
+            dropout,
+            act_fun,
+            norm_before,
+            has_outproj,
+        )
+
+        self.to(device)
+
+    def _validate_inputs(self, n_layers: List[int], sizes: List[int]) -> None:
+        """Validate input parameters."""
+        assert len(n_layers) == len(sizes), "n_layers and sizes must have the same length"
+        for i in range(len(sizes) - 1):
+            if sizes[i] > sizes[i + 1]:
+                assert sizes[i] % sizes[i + 1] == 0, "Adjacent sizes must be divisible"
+            else:
+                assert sizes[i + 1] % sizes[i] == 0, "Adjacent sizes must be divisible"
+
+    def _create_sampling_layers(self) -> nn.ModuleList:
+        """Create downsampling and upsampling layers."""
+        downsampling_layers = nn.ModuleList()
+        upsampling_layers = nn.ModuleList()
         for i in range(len(self.sizes) - 1):
             if self.sizes[i] > self.sizes[i + 1]:
-                factor, remainder = divmod(self.sizes[i], self.sizes[i + 1])
-                assert remainder == 0, "Sizes must be divisible by each other"
-                downsampling_factors.append(factor)
+                factor = self.sizes[i] // self.sizes[i + 1]
+                downsampling_layers.append(DownsamplingLayer(self.d_model, factor))
             else:
-                factor, remainder = divmod(self.sizes[i], self.sizes[i + 1])
-                assert factor == 0, "Sizes must be divisible by each other"
-                upsampling_factors.append(self.sizes[i + 1] // self.sizes[i])
+                factor = self.sizes[i + 1] // self.sizes[i]
+                upsampling_layers.append(UpsamplingLayer(self.d_model, factor))
+        return downsampling_layers, upsampling_layers
 
-        downsampling_layers = nn.ModuleList(
-            [DownsamplingLayer(self.d_model, factor) for factor in downsampling_factors]
-        )
-        upsampling_layers = nn.ModuleList(
-            [UpsamplingLayer(self.d_model, factor) for factor in upsampling_factors]
-        )
+    def _create_shift_right_layers(self) -> nn.ModuleList:
+        """Create shift right layers."""
+        shift_right_layers = nn.ModuleList()
+        for i in range(len(self.sizes) - 1):
+            if self.sizes[i] > self.sizes[i + 1]:
+                factor = self.sizes[i] // self.sizes[i + 1]
+                shift_right_layers.append(ShiftRight(shift=factor - 1))
+        return shift_right_layers
 
-        self.initial_shift_right = ShiftRight(shift=1)
-        self.shift_right_layers = nn.ModuleList(
-            [ShiftRight(shift=factor - 1) for factor in downsampling_factors]
-        )
-        self.down_up_sampling_layers = downsampling_layers + upsampling_layers
-
-        assert len(downsampling_layers) == len(
-            upsampling_layers
-        ), "Number of downsampling and upsampling layers must be equal"
-
-        self.decoder_chunks = nn.ModuleList(
+    def _create_decoder_chunks(
+        self,
+        n_layers: List[int],
+        num_heads: int,
+        method_params: Union[
+            LinearAttnParams, VanillaParams, PerformerParams, CosformerParams
+        ],
+        apply_rotary_pos_enc: bool,
+        dropout: float,
+        act_fun: Optional[nn.Module],
+        norm_before: bool,
+        has_outproj: bool,
+    ) -> nn.ModuleList:
+        """Create decoder chunks."""
+        return nn.ModuleList(
             [
                 Block(
                     n_layers=n,
                     d_model=self.d_model,
-                    num_heads=self.num_heads,
-                    method_params=self.method_params,
-                    apply_rotary_pos_enc=self.apply_rotary_pos_enc,
-                    dropout=self.dropout,
-                    has_outproj=False,
-                    act_fun=self.act_fun,
-                    norm_before=self.norm_before,
+                    num_heads=num_heads,
+                    method_params=method_params,
+                    apply_rotary_pos_enc=apply_rotary_pos_enc,
+                    dropout=dropout,
+                    has_outproj=has_outproj,
+                    act_fun=act_fun,
+                    norm_before=norm_before,
                     device=self.device,
                 )
-                for n, _ in zip(self.n_layers, self.sizes)
+                for n in n_layers
             ]
-        )
-        assert len(self.decoder_chunks) == len(self.down_up_sampling_layers) + 1, (
-            "Number of decoder chunks must be equal to the number of the sum of "
-            "downsampling and upsampling layers + 1"
         )
 
     def forward(
         self, x: torch.Tensor, causal: bool = True, inference: bool = False
     ) -> torch.Tensor:
-        # Init buffer for residual connections inside the hourglass block
-        outputs = []
+        residuals = []
 
-        # Initial decoder chunk
-        x = self.decoder_chunks[0](x, causal=causal, inference=inference)
+        n_downsampling_layers = len(self.downsampling_layers)
 
-        for i in range(len(self.decoder_chunks) - 1):
-            if isinstance(self.down_up_sampling_layers[i], DownsamplingLayer):
-                # 1. Save the output for residual connection
-                # 2. Downsample shifted input
-                # 3. Pass through decoder chunk
-                outputs.append(x)
-                x_downsampled = self.down_up_sampling_layers[i](
-                    self.shift_right_layers[i](x)
-                )
-                x = self.decoder_chunks[i + 1](
-                    x_downsampled, causal=causal, inference=inference
-                )
-            else:
-                # 1. Upsample the output from the previous decoder chunk
-                # 2. Upsample the input and add residual connection
-                # 3. Pass through decoder chunk
-                x_prime = outputs.pop(-1)
-                x_upsampled = x_prime + self.down_up_sampling_layers[i](x)
-                x = x_upsampled + self.decoder_chunks[i + 1](
-                    x_upsampled, key_value=x_prime, causal=causal, inference=inference
-                )
+        # Downsampling path
+        for i, (dec, downsample) in enumerate(
+            zip(
+                self.decoder_chunks[:n_downsampling_layers],
+                self.downsampling_layers,
+            )
+        ):
+            x = dec(x, causal=causal, inference=inference)
+            residuals.append(x)
+            x = self.shift_right_layers[i](x)
+            x = downsample(x)
+
+        # Middle block
+        x = self.decoder_chunks[n_downsampling_layers](x)
+
+        # Upsampling path
+        for dec, upsample, residual in zip(
+            reversed(self.decoder_chunks[n_downsampling_layers:]),
+            reversed(self.upsampling_layers),
+            reversed(residuals),
+        ):
+            x = upsample(x)
+            x = x + residual
+            x = dec(x, causal=causal, inference=inference)
 
         return x
