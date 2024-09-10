@@ -15,7 +15,6 @@ from transformer.layers.multi_head_attention.attention_mechanism.attn_params imp
 )
 from transformer.layers.multi_head_attention import MultiHeadAttention
 from transformer.layers import FeedForward
-from transformer.blocks.utils import ShiftRight
 
 
 class BlockLayer(nn.Module):
@@ -76,17 +75,7 @@ class BlockLayer(nn.Module):
         self.dropout2 = nn.Dropout(p=dropout)
 
         self.alpha = nn.Parameter(torch.tensor([1]), requires_grad=False)
-        self._init_weights()
         self.to(device)
-
-    def _init_weights(self) -> None:
-        """Initialize weights of the model."""
-        self.attention.init_weights()
-        self.ffn.init_weights()
-        # torch.nn.init.xavier_uniform_(self.norm1.weight)
-        # torch.nn.init.xavier_uniform_(self.norm2.weight)
-        # torch.nn.init.xavier_uniform_(self.norm1.bias)
-        # torch.nn.init.xavier_uniform_(self.norm2.bias)
 
     def forward(
         self,
@@ -118,13 +107,6 @@ class BlockLayer(nn.Module):
             x = self.norm1(x + self._attention(x, key_value, causal, inference))
         return x
 
-    def _feedforward_block(self, x: torch.Tensor) -> torch.Tensor:
-        if self.norm_before:
-            x = x + self.dropout2(self.ffn(self.norm2(x)))
-        else:
-            x = self.norm2(x + self.dropout2(self.ffn(x)))
-        return x
-
     def _attention(
         self,
         x: torch.Tensor,
@@ -140,8 +122,15 @@ class BlockLayer(nn.Module):
                 kv,
                 causal=causal,
                 inference=inference,
-            )[0]
+            )
         )
+
+    def _feedforward_block(self, x: torch.Tensor) -> torch.Tensor:
+        if self.norm_before:
+            x = x + self.dropout2(self.ffn(self.norm2(x)))
+        else:
+            x = self.norm2(x + self.dropout2(self.ffn(x)))
+        return x
 
 
 class Block(nn.Module):
@@ -176,7 +165,6 @@ class Block(nn.Module):
         self.device = device
 
         self.n_layers = self._validate_n_layers(n_layers)
-        self.shift_right = ShiftRight(shift=1)
 
         self.layers = nn.ModuleList(
             [
