@@ -148,8 +148,8 @@ class HourglassBlock(nn.Module):
 
         # Upsampling path
         for dec, upsample, residual in zip(
-            reversed(self.decoder_chunks[n_downsampling_layers:]),
-            reversed(self.upsampling_layers),
+            self.decoder_chunks[n_downsampling_layers:],
+            self.upsampling_layers,
             reversed(residuals),
         ):
             x = upsample(x)
