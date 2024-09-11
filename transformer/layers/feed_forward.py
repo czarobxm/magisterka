@@ -9,7 +9,9 @@ class FeedForward(nn.Module):
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(p=drop_prob)
 
-    def init_weights(self):
+        self._init_weights()
+
+    def _init_weights(self):
         """Initialize weights of the model."""
         nn.init.xavier_uniform_(self.linear1.weight)
         nn.init.xavier_uniform_(self.linear2.weight)
