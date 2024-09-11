@@ -74,7 +74,6 @@ class BlockLayer(nn.Module):
         self.norm2 = nn.LayerNorm(self.d_model)
         self.dropout2 = nn.Dropout(p=dropout)
 
-        self.alpha = nn.Parameter(torch.tensor([1]), requires_grad=False)
         self.to(device)
 
     def forward(
@@ -118,8 +117,8 @@ class BlockLayer(nn.Module):
         return self.dropout1(
             self.attention(
                 x,
-                kv,
-                kv,
+                x,
+                x,
                 causal=causal,
                 inference=inference,
             )
