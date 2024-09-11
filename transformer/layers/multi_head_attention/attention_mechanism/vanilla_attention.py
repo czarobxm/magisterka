@@ -29,7 +29,7 @@ class VanillaAttention(nn.Module):
         query = (
             query.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2),
         )
-        key = (key.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2),)
+        key = key.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
         value = value.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
 
         return query, key, value
