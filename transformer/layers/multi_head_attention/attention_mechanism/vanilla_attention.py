@@ -26,11 +26,13 @@ class VanillaAttention(nn.Module):
         Multi-head reshaping - Split heads from size [B, L, D] to size: [B, Nh, L, Dh]
         """
         batch_size = query.size(0)
+        query = (
+            query.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2),
+        )
+        key = (key.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2),)
+        value = value.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
 
-        def reshape(x: torch.Tensor) -> torch.Tensor:
-            return x.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
-
-        return reshape(query), reshape(key), reshape(value)
+        return query, key, value
 
     def scaled_dot_product_attention(
         self,
@@ -52,7 +54,8 @@ class VanillaAttention(nn.Module):
         attn_weight = query @ key.transpose(-2, -1) / scale_factor
         attn_weight += attn_bias
         attn_weight = torch.softmax(attn_weight, dim=-1)
-        return torch.matmul(attn_weight, value)
+        output = attn_weight @ value
+        return output
 
     def forward(
         self,
