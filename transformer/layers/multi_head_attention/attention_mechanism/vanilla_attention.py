@@ -49,7 +49,7 @@ class VanillaAttention(nn.Module):
             )
             attn_bias.masked_fill_(causal_mask, float("-inf"))
 
-        attn_weight = query @ key.transpose(-2, -1) / scale_factor
+        attn_weight = query @ key.transpose(-2, -1) * scale_factor
         attn_weight += attn_bias
         attn_weight = torch.softmax(attn_weight, dim=-1)
         output = attn_weight @ value
