@@ -79,16 +79,6 @@ class MultiHeadAttention(nn.Module):
 
         self.to(self.device)
 
-    def init_weights(self) -> None:
-        """
-        Initialize weights of the model.
-        """
-        nn.init.xavier_uniform_(self.w_q.weight)
-        nn.init.xavier_uniform_(self.w_k.weight)
-        nn.init.xavier_uniform_(self.w_v.weight)
-        if self.has_outproj:
-            nn.init.xavier_uniform_(self.w_o.weight)
-
     def forward(
         self,
         query: torch.Tensor,

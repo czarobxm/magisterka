@@ -1,9 +1,10 @@
-# pylint: disable=no-member
+# pylint: disable=attribute-defined-outside-init,no-member
 """
-Cosformer attention implementation based on an official implementation: 
+Cosformer attention implementation based on the official implementation:
 https://github.com/OpenNLPLab/cosFormer/blob/main/cosformer.py
 """
-from typing import List
+
+from typing import List, Tuple
 
 import torch
 from torch import nn
@@ -35,35 +36,29 @@ def query_key_feature_map(
 ) -> torch.Tensor:
     """
     Compute the query and key feature map for the cosformer attention mechanism.
-    [B, Nh, L, Dh] -> [B, Nh, L, 2 * Dh]
+
+    Args:
+        x (torch.Tensor): Input tensor of shape [B, Nh, L, Dh]
+        weight_index (torch.Tensor): Weight index tensor
+        seq_len (int): Sequence length
+        m (int): Maximum of source and target sequence lengths
+
+    Returns:
+        torch.Tensor: Feature map of shape [B, Nh, L, 2 * Dh]
     """
-    x = torch.cat(
-        [
-            x
-            * torch.sin(
-                weight_index[:, :seq_len, :] / m  # pylint: disable=unsubscriptable-object
-            ),
-            x
-            * torch.cos(
-                weight_index[:, :seq_len, :] / m  # pylint: disable=unsubscriptable-object
-            ),
-        ],
-        dim=-1,
-    )
-    return x
+    sin_part = x * torch.sin(weight_index[:, :seq_len, :] / m)
+    cos_part = x * torch.cos(weight_index[:, :seq_len, :] / m)
+    return torch.cat([sin_part, cos_part], dim=-1)
 
 
 class Cosformer(BaseAttentionMechanism):
     """
     Cosformer linear attention mechanism - https://arxiv.org/abs/2202.08791.
 
-    This class is designed to provide efficient non-causal attention for deep learning
-    models and supports multiple hardware platforms:
+    This class provides efficient non-causal attention for deep learning models
+    and supports multiple hardware platforms:
     - MPS: Implementation based on the official repository
-    (https://github.com/OpenNLPLab/cosFormer).
-    - CPU and CUDA: Implementation based on causal_dot_product function
-    from FastTransformers (https://github.com/idiap/fast-transformers).
-
+    - CPU and CUDA: Implementation based on causal_dot_product function from FastTransformers
     """
 
     def __init__(
@@ -80,13 +75,12 @@ class Cosformer(BaseAttentionMechanism):
         self.register_buffer(
             "k_", torch.zeros(self.num_heads, 2 * self.dim_head, device=device)
         )
-
         self.to(device)
 
     def reset_cache(self) -> None:
         """Reset the internal states of the attention mechanism."""
-        self.kv.zero_()
-        self.k_.zero_()
+        self.kv.zero_()  # pylint: disable=no-member
+        self.k_.zero_()  # pylint: disable=no-member
 
     def inference(
         self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor
@@ -97,24 +91,21 @@ class Cosformer(BaseAttentionMechanism):
         )  # [B, L, 2 * Dh], [B, L, Dh] -> [B, 2 * Dh, Dh]
 
         # Update internal states
-        self.kv = self.kv + kv_  # pylint: disable=attribute-defined-outside-init
-        self.k_ = self.k_ + key[:, 0, :]  # pylint: disable=attribute-defined-outside-init
+        self.kv = (  # pylint: disable=attribute-defined-outside-init
+            self.kv + kv_  # pylint: disable=no-member
+        )
+        self.k_ = self.k_ + key[:, 0, :]  # pylint: disable=no-member
 
-        z_ = 1 / torch.clamp_min(
-            torch.einsum("nld,nd->nl", query, self.k_), self.eps
-        )  # [B, L, 2 * Dh], [B, 2 * Dh] -> [B, L]
-        attn_output = torch.einsum(
-            "nld,ndm,nl->nlm", query, self.kv, z_
-        )  # [B, L, 2 * Dh], [B, 2 * Dh, Dh], [B, L, Dh]  -> [B, L, Dh]
-        return attn_output
+        # Calculate denominator: [B, L, 2 * Dh], [B, 2 * Dh] -> [B, L]
+        z_ = 1 / torch.clamp_min(torch.einsum("nld,nd->nl", query, self.k_), self.eps)
+
+        # Compute attention output: [B, L, 2 * Dh], [B, 2 * Dh, Dh], [B, L] -> [B, L, Dh]
+        return torch.einsum("nld,ndm,nl->nlm", query, self.kv, z_)
 
     def multihead_reshape(
         self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor
     ) -> List[torch.Tensor]:
-        """
-        Reshape the input tensors for the multi-head attention mechanism. The reshape size
-        depends on the hardware platform.
-        """
+        """Reshape the input tensors for the multi-head attention mechanism."""
         return (
             multihead_reshape(query, self.num_heads, self.dim_head),
             multihead_reshape(key, self.num_heads, self.dim_head),
@@ -147,46 +138,27 @@ class Cosformer(BaseAttentionMechanism):
     ) -> torch.Tensor:
         """
         Cosformer attention mechanism - https://arxiv.org/abs/2202.08791
-        All below tensor are described using this nomenclature: B - batch,
-        L - query sequence length/attention dimension,
-        S - value and key sequence length/attention dimension, H -  number of heads,
-        D - head dim.
 
-        :param q: query tensor of size [B, Nh, L, Hd] for device in ["cuda", "cpu"]
-            or [B * Nh, L, Hd] for other cases
-        :param key: key tensor of size [B, Nh, L, Hd] for device in ["cuda", "cpu"]
-            or [B * Nh, L, Hd] for other cases
-        :param value: value tensor of size [B, Nh, L, Hd] for device in ["cuda", "cpu"]
-            or [B * Nh, L, Hd] for other cases
+        Args:
+            query (torch.Tensor): Query tensor of shape [B, Nh, L, Hd]
+            key (torch.Tensor): Key tensor of shape [B, Nh, L, Hd]
+            value (torch.Tensor): Value tensor of shape [B, Nh, L, Hd]
+            causal (bool): Whether to use causal attention
+            inference (bool): Whether to use inference mode
+            start_pos (int): Starting position for the feature map
 
-        :return: attention mechanism output, tensor of shape [B, L, D]
+        Returns:
+            torch.Tensor: Attention mechanism output of shape [B, L, D]
         """
-        # Get sizes of the input tensors
-        batch_size = query.size(0)
-        tgt_len = query.size(2)
-        src_len = key.size(2)
-
-        # Apply feature map to the query and key
+        tgt_len, src_len = query.size(2), key.size(2)
         q_, k_ = self.feature_map(query, key, tgt_len, src_len, start_pos)
 
-        # Apply causal or non causal attention mechanism or inference
-        if causal and not inference:
-            out = attention_causal(
-                query=q_,
-                key=k_,
-                value=value,
-                num_heads=self.num_heads,
-                eps=self.eps,
-                kv=self.kv,
-                k_=self.k_,
-                device=self.device,
-            )
-        elif not causal and not inference:
-            out = attention_noncausal(q_, k_, value, self.eps)
-        else:
+        if inference:
             raise NotImplementedError("Inference is not supported for the cosformer.")
 
-        # Undo the multi-head reshape. [B, L, Nh, Dh] -> [B, L, D]
-        out = undo_multihead_reshape(out, self.d_model, batch_size, tgt_len)
+        if causal:
+            out = attention_causal(q_, k_, value, self.eps, self.kv, self.k_, self.device)
+        else:
+            out = attention_noncausal(q_, k_, value, self.eps)
 
-        return out
+        return undo_multihead_reshape(out)
