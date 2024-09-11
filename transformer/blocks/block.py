@@ -117,8 +117,8 @@ class BlockLayer(nn.Module):
         return self.dropout1(
             self.attention(
                 x,
-                x,
-                x,
+                kv,
+                kv,
                 causal=causal,
                 inference=inference,
             )
