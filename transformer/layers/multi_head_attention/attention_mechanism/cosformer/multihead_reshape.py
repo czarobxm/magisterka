@@ -41,5 +41,5 @@ def undo_multihead_reshape(x: torch.Tensor) -> torch.Tensor:
         Dh: Dimension of each head
         D: Model dimension (D = Nh * Dh)
     """
-    batch_size, num_heads, seq_len, dim_head = x.size()
-    return x.transpose(1, 2).contiguous().view(batch_size, seq_len, num_heads * dim_head)
+    batch_size, seq_len, num_heads, dim_head = x.size()
+    return x.contiguous().view(batch_size, seq_len, num_heads * dim_head)

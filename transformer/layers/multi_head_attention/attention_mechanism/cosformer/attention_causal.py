@@ -46,9 +46,9 @@ def attention_causal_non_cuda(
     k_cum = torch.cumsum(key, dim=2)
     denom = torch.clamp_min(torch.einsum("bnlm,bnlm->bnl", query, k_cum), eps)
 
-    # Update internal states
-    kv_buffer[:, :, :] = kv_cum[:, :, -1, :, :]
-    k_buffer[:, :] = k_cum[:, :, -1, :]
+    # TODO: Update internal states
+    # kv_buffer[:, :, :] = kv_cum[:, :, -1, :, :]
+    # k_buffer[:, :] = k_cum[:, :, -1, :]
 
     # Normalize the result: [B, Nh, L, Dh], [B, Nh, L, 1] -> [B, Nh, L, Dh]
     attn_output = qkv / denom.unsqueeze(-1)
@@ -75,7 +75,7 @@ def attention_causal_cuda(
         eps (float): Small constant for numerical stability
 
     Returns:
-        torch.Tensor: Attention output of shape [B, L, Nh, Dh]
+        torch.Tensor: Attention output of shape [B, Nh, L, Dh]
 
     Where:
         B: Batch size
