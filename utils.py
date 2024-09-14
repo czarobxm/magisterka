@@ -1,5 +1,5 @@
 from argparse import Namespace
-from typing import Union
+from typing import Union, Tuple
 
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
@@ -12,75 +12,46 @@ from transformer.layers.multi_head_attention.attention_mechanism.attn_params imp
     VanillaParams,
 )
 
+import logging
 
-def create_dataloaders(args: Namespace, tokenizer: AutoTokenizer):
-    num_classes = None
 
-    if args.task == "classification":
-        train_ds = TextClassificationDataset(
+def setup_logging():
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(message)s", datefmt="%H:%M:%S"
+    )
+
+
+def create_dataloaders(
+    args: Namespace, tokenizer: AutoTokenizer
+) -> Tuple[DataLoader, DataLoader, DataLoader, int]:
+    dataset_cls = (
+        TextClassificationDataset
+        if args.task == "classification"
+        else TextGenerationDataset
+    )
+    num_classes = 2 if args.task == "classification" else None
+
+    datasets = {
+        split: dataset_cls(
             args.dataset,
-            split="train",
+            split=split,
             tokenizer=tokenizer,
             max_length=args.max_length,
-            prepare_dataset=True,
+            prepare_dataset=args.task == "classification",
+            device=args.device if args.task != "classification" else None,
         )
-        val_ds = TextClassificationDataset(
-            args.dataset,
-            split="val",
-            tokenizer=tokenizer,
-            max_length=args.max_length,
-            prepare_dataset=True,
-        )
-        test_ds = TextClassificationDataset(
-            args.dataset,
-            split="test",
-            tokenizer=tokenizer,
-            max_length=args.max_length,
-            prepare_dataset=True,
-        )
+        for split in ["train", "val", "test"]
+    }
 
-        train_loader = DataLoader(train_ds, batch_size=args.batch_size)
-        if val_ds.texts is None:
-            val_loader = DataLoader(test_ds, batch_size=args.batch_size)
-        else:
-            val_loader = DataLoader(val_ds, batch_size=args.batch_size)
-        test_loader = DataLoader(test_ds, batch_size=args.batch_size)
-        del train_ds, val_ds, test_ds
+    dataloaders = {
+        split: DataLoader(dataset, batch_size=args.batch_size)
+        for split, dataset in datasets.items()
+    }
 
-        num_classes = 2
+    if datasets["val"].texts is None:
+        dataloaders["val"] = dataloaders["test"]
 
-    elif args.task == "sequence_modelling" or args.task == "image_generation":
-        train_ds = TextGenerationDataset(
-            args.dataset,
-            split="train",
-            tokenizer=tokenizer,
-            max_length=args.max_length,
-            device=args.device,
-        )
-        val_ds = TextGenerationDataset(
-            args.dataset,
-            split="val",
-            tokenizer=tokenizer,
-            max_length=args.max_length,
-            device=args.device,
-        )
-        test_ds = TextGenerationDataset(
-            args.dataset,
-            split="test",
-            tokenizer=tokenizer,
-            max_length=args.max_length,
-            device=args.device,
-        )
-
-        train_loader = DataLoader(train_ds, batch_size=args.batch_size)
-        val_loader = DataLoader(val_ds, batch_size=args.batch_size)
-        test_loader = DataLoader(test_ds, batch_size=args.batch_size)
-
-        del train_ds, val_ds, test_ds
-    else:
-        raise NotImplementedError(f"Task {args.task} not implemented.")
-
-    return train_loader, val_loader, test_loader, num_classes
+    return dataloaders["train"], dataloaders["val"], dataloaders["test"], num_classes
 
 
 def initialize_model(
@@ -88,38 +59,26 @@ def initialize_model(
     tokenizer: AutoTokenizer,
     num_classes: int,
     method_params: Union[CosformerParams, PerformerParams, VanillaParams],
-):
+) -> Union[ClassifierTransformer, DecoderOnlyTransformer]:
+    common_params = {
+        "d_model": args.d_model,
+        "vocab_size": len(tokenizer),
+        "structure": args.structure,
+        "num_heads": args.num_heads,
+        "method_params": method_params,
+        "apply_rotary_pos_enc": args.apply_rotary_pos_enc,
+        "dropout": args.dropout,
+        "attn_has_outproj": args.has_outproj,
+        "act_fun": args.act_fun,
+        "post_norm": args.post_norm,
+        "device": args.device,
+    }
+
     if args.model == "classifier":
-        model = ClassifierTransformer(
-            d_model=args.d_model,
-            vocab_size=len(tokenizer),
-            structure=args.structure,
-            num_classes=num_classes,
-            num_heads=args.num_heads,
-            method_params=method_params,
-            apply_rotary_pos_enc=args.apply_rotary_pos_enc,
-            dropout=args.dropout,
-            attn_has_outproj=args.has_outproj,
-            act_fun=args.act_fun,
-            post_norm=args.post_norm,
-            device=args.device,
-        )
+        return ClassifierTransformer(num_classes=num_classes, **common_params)
     elif args.model == "decoder_only":
-        model = DecoderOnlyTransformer(
-            d_model=args.d_model,
-            vocab_size=len(tokenizer),
-            structure=args.structure,
-            num_heads=args.num_heads,
-            method_params=method_params,
-            apply_rotary_pos_enc=args.apply_rotary_pos_enc,
-            dropout=args.dropout,
-            attn_has_outproj=args.has_outproj,
-            act_fun=args.act_fun,
-            post_norm=args.post_norm,
-            use_embedding=False if args.task == "image_generation" else True,
-            device=args.device,
+        return DecoderOnlyTransformer(
+            use_embedding=args.task != "image_generation", **common_params
         )
     else:
         raise ValueError(f"Model {args.model} not implemented.")
-
-    return model
