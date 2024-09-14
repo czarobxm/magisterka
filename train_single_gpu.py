@@ -64,7 +64,8 @@ parser.add_argument("--tags", default=[], help=None, type=list_of_strings)
 parser.add_argument("--lr", type=float, default=0.0001, help="")
 parser.add_argument("--scheduler", action="store_true", help="")
 parser.add_argument("--scheduler_gamma", type=float, default=9, help="")
-parser.add_argument("--scheduler_step_size", type=int, default=15, help="")
+parser.add_argument("--scheduler_step_size", type=int, default=3, help="")
+parser.add_argument("--scheduler_last_epoch", type=int, default=15, help="")
 parser.add_argument("--epochs", type=int, default=6, help="")
 parser.add_argument("--batch_size", type=int, default=64, help="")
 parser.add_argument("--criterion", default="cross_entropy", help="")
@@ -193,6 +194,7 @@ def main():
             optimizer,
             gamma=args.scheduler_gamma,
             step_size=args.scheduler_step_size,
+            last_epoch=args.scheduler_last_epoch,
         )
     else:
         scheduler = None
