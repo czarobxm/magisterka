@@ -190,7 +190,9 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     if args.scheduler:
         scheduler = torch.optim.lr_scheduler.LinearLR(
-            optimizer, start_factor=args.lr, end_factor=args.lr_end
+            optimizer,
+            start_factor=args.scheduler_start_factor,
+            total_iters=args.scheduler_total_iters,
         )
     else:
         scheduler = None
