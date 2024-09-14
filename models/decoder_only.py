@@ -37,7 +37,7 @@ class DecoderOnlyTransformer(BaseModel):
         dropout: float = 0.1,
         attn_has_outproj: bool = True,
         act_fun: str = None,
-        norm_before: bool = False,
+        post_norm: bool = False,
         pos_enc_type: str = "learnable",
         use_embedding: bool = True,
         device: str = "cpu",
@@ -52,7 +52,7 @@ class DecoderOnlyTransformer(BaseModel):
             dropout=dropout,
             attn_has_outproj=attn_has_outproj,
             act_fun=act_fun,
-            norm_before=norm_before,
+            post_norm=post_norm,
             pos_enc_type=pos_enc_type,
             use_embedding=use_embedding,
             device=device,
@@ -78,7 +78,7 @@ class DecoderOnlyTransformer(BaseModel):
                 dropout=self.dropout,
                 has_outproj=self.attn_has_outproj,
                 act_fun=self.act_fun,
-                norm_before=self.norm_before,
+                post_norm=self.post_norm,
                 device=self.device,
             )
         else:
@@ -92,7 +92,7 @@ class DecoderOnlyTransformer(BaseModel):
                 dropout=self.dropout,
                 has_outproj=self.attn_has_outproj,
                 act_fun=self.act_fun,
-                norm_before=self.norm_before,
+                post_norm=self.post_norm,
                 device=self.device,
             )
         # Classifier

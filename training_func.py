@@ -156,6 +156,7 @@ def train(
     model: nn.Module,
     args: Namespace,
     optimizer: torch.optim.Optimizer,
+    scheduler: torch.optim.lr_scheduler.LRScheduler,
     loss_fn: nn.Module,
     train_loader: DataLoader,
     val_loader: DataLoader,
@@ -187,6 +188,8 @@ def train(
         running_loss = train_one_epoch(
             train_loader, model, optimizer, loss_fn, run, task, running_loss
         )
+        if scheduler is not None:
+            scheduler.step()
 
         # Evaluate model on validation set
         model.train(True)

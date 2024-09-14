@@ -61,7 +61,10 @@ parser.add_argument("--name", default=None, help="")
 parser.add_argument("--tags", default=[], help=None, type=list_of_strings)
 
 # Training parameters
-parser.add_argument("--lr", type=float, default=0.00005, help="")
+parser.add_argument("--lr", type=float, default=0.00009, help="")
+parser.add_argument("--scheduler", action="store_true", help="")
+parser.add_argument("--lr_end", type=float, default=0.00001, help="")
+parser.add_argument("--scheduler_total_iters", type=int, default=15, help="")
 parser.add_argument("--epochs", type=int, default=6, help="")
 parser.add_argument("--batch_size", type=int, default=64, help="")
 parser.add_argument("--criterion", default="cross_entropy", help="")
@@ -76,11 +79,10 @@ parser.add_argument("--d_model", type=int, default=512, help="")
 parser.add_argument("--num_heads", type=int, default=8, help="")
 parser.add_argument("--dropout", type=int, default=0.1, help="")
 parser.add_argument("--max_length", type=int, default=512, help="")
-parser.add_argument("--deepnorm", type=bool, default=True, help="")
 parser.add_argument("--has_outproj", type=bool, default=True, help="")
 parser.add_argument("--act_fun", default="relu", help="")
 parser.add_argument("--apply_rotary_pos_enc", action="store_true", help="")
-parser.add_argument("--norm_before", type=bool, default=True, help="")
+parser.add_argument("--post_norm", type=bool, default=True, help="")
 
 # Performer parameters
 parser.add_argument(
@@ -184,8 +186,14 @@ def main():
     model = initialize_model(args, tokenizer, num_classes, method_params)
     logging.info('Model "%s" initialized.', args.model)
 
-    logging.info("Initializing optimizer and loss function...")
+    logging.info("Initializing optimizer, scheduler and loss function...")
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    if args.scheduler:
+        scheduler = torch.optim.lr_scheduler.LinearLR(
+            optimizer, start_factor=args.lr, end_factor=args.lr_end
+        )
+    else:
+        scheduler = None
 
     if args.criterion == "cross_entropy":
         loss_fn = torch.nn.CrossEntropyLoss()  # ignore_index=tokenizer.pad_token_id
@@ -199,6 +207,7 @@ def main():
         model,
         args,
         optimizer,
+        scheduler,
         loss_fn,
         train_loader,
         val_loader,

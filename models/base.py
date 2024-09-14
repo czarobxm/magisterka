@@ -49,7 +49,7 @@ class BaseModel(nn.Module):
         dropout: float,
         attn_has_outproj: bool,
         act_fun: str,
-        norm_before: bool,
+        post_norm: bool,
         pos_enc_type: str,
         use_embedding: bool,
         device: str,
@@ -71,7 +71,7 @@ class BaseModel(nn.Module):
             self.act_fun = nn.ReLU()
         elif act_fun == "none":
             self.act_fun = None
-        self.norm_before = norm_before
+        self.post_norm = post_norm
         self.use_embedding = use_embedding
         self.device = device
 
@@ -105,6 +105,7 @@ class BaseModel(nn.Module):
             "attn_has_outproj": self.attn_has_outproj,
             "pos_enc_type": self.pos_enc_type,
             "act_fun": self.act_fun_name,
+            "post_norm": self.post_norm,
             "embedder_type": "learnable",
             "use_embedding": self.use_embedding,
             "device": self.device,

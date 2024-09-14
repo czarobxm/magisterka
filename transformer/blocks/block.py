@@ -34,7 +34,7 @@ class BlockLayer(nn.Module):
         dropout: float = 0.1,
         has_outproj: bool = True,
         act_fun: Optional[nn.Module] = None,
-        norm_before: bool = True,
+        post_norm: bool = False,
         device: str = "cpu",
     ) -> None:
         """
@@ -48,7 +48,7 @@ class BlockLayer(nn.Module):
         self.d_model = d_model
         self.num_heads = num_heads
         self.dim_head = d_model // num_heads
-        self.norm_before = norm_before
+        self.post_norm = post_norm
         self.device = device
 
         self.attention = MultiHeadAttention(
@@ -95,15 +95,15 @@ class BlockLayer(nn.Module):
         causal: bool,
         inference: bool,
     ) -> torch.Tensor:
-        if self.norm_before:
+        if self.post_norm:
+            x = self.norm1(x + self._attention(x, key_value, causal, inference))
+        else:
             x = x + self._attention(
                 self.norm1(x),
                 self.norm1(key_value) if key_value is not None else None,
                 causal,
                 inference,
             )
-        else:
-            x = self.norm1(x + self._attention(x, key_value, causal, inference))
         return x
 
     def _attention(
@@ -125,10 +125,10 @@ class BlockLayer(nn.Module):
         )
 
     def _feedforward_block(self, x: torch.Tensor) -> torch.Tensor:
-        if self.norm_before:
-            x = x + self.dropout2(self.ffn(self.norm2(x)))
-        else:
+        if self.post_norm:
             x = self.norm2(x + self.dropout2(self.ffn(x)))
+        else:
+            x = x + self.dropout2(self.ffn(self.norm2(x)))
         return x
 
 
@@ -153,7 +153,7 @@ class Block(nn.Module):
         dropout: float = 0.1,
         has_outproj: bool = True,
         act_fun: str = None,
-        norm_before: bool = True,
+        post_norm: bool = False,
         device: str = "cpu",
     ) -> None:
         """Init encoder - stack :param n_layers: the encoder layers on each other"""
@@ -175,7 +175,7 @@ class Block(nn.Module):
                     dropout=dropout,
                     has_outproj=self.has_outproj,
                     act_fun=act_fun,
-                    norm_before=norm_before,
+                    post_norm=post_norm,
                     device=self.device,
                 )
                 for _ in range(self.n_layers)

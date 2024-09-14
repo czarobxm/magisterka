@@ -35,7 +35,7 @@ class HourglassBlock(nn.Module):
         dropout: float = 0.1,
         has_outproj: bool = True,
         act_fun: nn.Module = None,
-        norm_before: bool = False,
+        post_norm: bool = False,
         device: str = "cpu",
     ) -> None:
         super().__init__()
@@ -55,7 +55,7 @@ class HourglassBlock(nn.Module):
             apply_rotary_pos_enc,
             dropout,
             act_fun,
-            norm_before,
+            post_norm,
             has_outproj,
         )
 
@@ -102,7 +102,7 @@ class HourglassBlock(nn.Module):
         apply_rotary_pos_enc: bool,
         dropout: float,
         act_fun: Optional[nn.Module],
-        norm_before: bool,
+        post_norm: bool,
         has_outproj: bool,
     ) -> nn.ModuleList:
         """Create decoder chunks."""
@@ -117,7 +117,7 @@ class HourglassBlock(nn.Module):
                     dropout=dropout,
                     has_outproj=has_outproj,
                     act_fun=act_fun,
-                    norm_before=norm_before,
+                    post_norm=post_norm,
                     device=self.device,
                 )
                 for n in n_layers
