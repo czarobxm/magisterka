@@ -61,11 +61,12 @@ parser.add_argument("--name", default=None, help="")
 parser.add_argument("--tags", default=[], help=None, type=list_of_strings)
 
 # Training parameters
-parser.add_argument("--lr", type=float, default=0.0001, help="")
+parser.add_argument("--lr", type=float, default=0.00008, help="")
 parser.add_argument("--scheduler", action="store_true", help="")
-parser.add_argument("--scheduler_gamma", type=float, default=9, help="")
-parser.add_argument("--scheduler_step_size", type=int, default=3, help="")
-parser.add_argument("--scheduler_last_epoch", type=int, default=15, help="")
+parser.add_argument("--scheduler_gamma", type=float, default=0.66, help="")
+parser.add_argument(
+    "--scheduler_milestones", type=int, default=[3, 6, 9, 12, 15], help=""
+)
 parser.add_argument("--epochs", type=int, default=6, help="")
 parser.add_argument("--batch_size", type=int, default=64, help="")
 parser.add_argument("--criterion", default="cross_entropy", help="")
@@ -190,11 +191,10 @@ def main():
     logging.info("Initializing optimizer, scheduler and loss function...")
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     if args.scheduler:
-        scheduler = torch.optim.lr_scheduler.StepLR(
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(
             optimizer,
             gamma=args.scheduler_gamma,
-            step_size=args.scheduler_step_size,
-            last_epoch=args.scheduler_last_epoch,
+            milestones=args.scheduler_milestones,
         )
     else:
         scheduler = None
