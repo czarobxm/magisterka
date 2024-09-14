@@ -61,9 +61,9 @@ parser.add_argument("--name", default=None, help="")
 parser.add_argument("--tags", default=[], help=None, type=list_of_strings)
 
 # Training parameters
-parser.add_argument("--lr", type=float, default=0.00009, help="")
+parser.add_argument("--lr", type=float, default=0.0001, help="")
 parser.add_argument("--scheduler", action="store_true", help="")
-parser.add_argument("--lr_end", type=float, default=0.00001, help="")
+parser.add_argument("--scheduler_start_factor", type=float, default=9, help="")
 parser.add_argument("--scheduler_total_iters", type=int, default=15, help="")
 parser.add_argument("--epochs", type=int, default=6, help="")
 parser.add_argument("--batch_size", type=int, default=64, help="")
