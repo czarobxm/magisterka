@@ -115,7 +115,7 @@ def initialize_model(
             dropout=args.dropout,
             attn_has_outproj=args.has_outproj,
             act_fun=args.act_fun,
-            post_norm=args.p_norm,
+            post_norm=args.post_norm,
             use_embedding=False if args.task == "image_generation" else True,
             device=args.device,
         )
