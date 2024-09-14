@@ -101,7 +101,7 @@ def initialize_model(
             dropout=args.dropout,
             attn_has_outproj=args.has_outproj,
             act_fun=args.act_fun,
-            norm_before=args.norm_before,
+            post_norm=args.post_norm,
             device=args.device,
         )
     elif args.model == "decoder_only":
@@ -115,7 +115,7 @@ def initialize_model(
             dropout=args.dropout,
             attn_has_outproj=args.has_outproj,
             act_fun=args.act_fun,
-            norm_before=args.norm_before,
+            post_norm=args.p_norm,
             use_embedding=False if args.task == "image_generation" else True,
             device=args.device,
         )
