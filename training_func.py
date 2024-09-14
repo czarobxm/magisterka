@@ -185,6 +185,7 @@ def train(
 
     for epoch_number in range(epochs):
         model.train(True)
+        print(f"Learning rate: {optimizer.param_groups[0]['lr']}")
         running_loss = train_one_epoch(
             train_loader, model, optimizer, loss_fn, run, task, running_loss
         )
