@@ -65,7 +65,7 @@ parser.add_argument("--lr", type=float, default=0.00008, help="")
 parser.add_argument("--scheduler", action="store_true", help="")
 parser.add_argument("--scheduler_gamma", type=float, default=0.66, help="")
 parser.add_argument(
-    "--scheduler_milestones", type=int, default=[3, 6, 9, 12, 15], help=""
+    "--scheduler_milestones", type=int, nargs="*", default=[3, 6, 9, 12, 15], help=""
 )
 parser.add_argument("--epochs", type=int, default=6, help="")
 parser.add_argument("--batch_size", type=int, default=64, help="")
