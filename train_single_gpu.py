@@ -63,8 +63,8 @@ parser.add_argument("--tags", default=[], help=None, type=list_of_strings)
 # Training parameters
 parser.add_argument("--lr", type=float, default=0.0001, help="")
 parser.add_argument("--scheduler", action="store_true", help="")
-parser.add_argument("--scheduler_start_factor", type=float, default=9, help="")
-parser.add_argument("--scheduler_total_iters", type=int, default=15, help="")
+parser.add_argument("--scheduler_gamma", type=float, default=9, help="")
+parser.add_argument("--scheduler_step_size", type=int, default=15, help="")
 parser.add_argument("--epochs", type=int, default=6, help="")
 parser.add_argument("--batch_size", type=int, default=64, help="")
 parser.add_argument("--criterion", default="cross_entropy", help="")
@@ -189,10 +189,10 @@ def main():
     logging.info("Initializing optimizer, scheduler and loss function...")
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     if args.scheduler:
-        scheduler = torch.optim.lr_scheduler.LinearLR(
+        scheduler = torch.optim.lr_scheduler.StepLR(
             optimizer,
-            start_factor=args.scheduler_start_factor,
-            total_iters=args.scheduler_total_iters,
+            gamma=args.scheduler_gamma,
+            step_size=args.scheduler_step_size,
         )
     else:
         scheduler = None
