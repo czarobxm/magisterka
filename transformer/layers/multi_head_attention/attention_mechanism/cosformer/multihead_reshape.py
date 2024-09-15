@@ -29,7 +29,7 @@ def undo_multihead_reshape(x: torch.Tensor) -> torch.Tensor:
     Undo the reshape operation for multi-head attention output.
 
     Args:
-        x (torch.Tensor): Input tensor of shape [B, Nh, L, Dh]
+        x (torch.Tensor): Input tensor of shape [B, L, Nh, Dh]
 
     Returns:
         torch.Tensor: Reshaped tensor of shape [B, L, D]

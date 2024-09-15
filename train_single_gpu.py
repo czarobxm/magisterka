@@ -136,3 +136,6 @@ def main():
     logging.info("Evaluation finished.")
 
     run.stop()
+
+
+main()

@@ -83,7 +83,7 @@ def attention_causal_cuda(
         L: Sequence length
         Dh: Dimension of each head
     """
-    # Compute the normalizers: [B, Nh, L, Dh], [B, Nh, L, Dh] -> [B, Nh, L]
+    # Compute the normalizers: [B, Nh, L, 2 * Dh], [B, Nh, L, 2 * Dh] -> [B, Nh, L]
     denom = 1 / (torch.einsum("bnld,bnld->bnl", query, key.cumsum(2)) + eps)
 
     # Compute the unnormalized result: [B, Nh, L, 2 * Dh], [B, Nh, L, 2 * Dh], [B, Nh, L, Dh] -> [B, Nh, L, Dh]

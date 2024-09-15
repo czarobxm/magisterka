@@ -140,9 +140,9 @@ class Cosformer(BaseAttentionMechanism):
         Cosformer attention mechanism - https://arxiv.org/abs/2202.08791
 
         Args:
-            query (torch.Tensor): Query tensor of shape [B, Nh, L, Hd]
-            key (torch.Tensor): Key tensor of shape [B, Nh, L, Hd]
-            value (torch.Tensor): Value tensor of shape [B, Nh, L, Hd]
+            query (torch.Tensor): Query tensor of shape [B, Nh, L, Dh]
+            key (torch.Tensor): Key tensor of shape [B, Nh, L, Dh]
+            value (torch.Tensor): Value tensor of shape [B, Nh, L, Dh]
             causal (bool): Whether to use causal attention
             inference (bool): Whether to use inference mode
             start_pos (int): Starting position for the feature map
