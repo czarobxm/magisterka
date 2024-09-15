@@ -30,9 +30,7 @@ def parse_arguments() -> argparse.Namespace:
         if isinstance(value, bool):
             parser.add_argument(f"--{arg}", action="store_true", help="")
         elif isinstance(value, list):
-            parser.add_argument(
-                f"--{arg}", nargs="*", type=arg_type, default=value, help=""
-            )
+            parser.add_argument(f"--{arg}", nargs="+", type=int, default=value, help="")
         else:
             parser.add_argument(f"--{arg}", type=arg_type, default=value, help="")
 
