@@ -36,6 +36,7 @@ def log_batch_neptune(
 def prepare_inputs_and_targets(
     data: torch.Tensor, task: str, device: str
 ) -> Tuple[torch.Tensor, torch.Tensor]:
+    print(data)
     if task == "classification":
         return data[0].to(device), data[1].to(device)
     elif task == "sequence_modelling":
@@ -81,6 +82,7 @@ def train_one_epoch(
     run: neptune.Run,
     task: str,
 ):
+    print(train_loader)
     running_loss = 0
     correct = 0
     total = 0
