@@ -72,18 +72,13 @@ def load_enwik8(split: str = "train", cache_dir: str = None):
     with open(cache_dir + "/enwik8", "r", encoding="utf-8") as file:
         print("a")
         ds = file.read()
-    # if split == "train":
-    #     return ds[:90_000_000]
-    # if split == "val":
-    #     return ds[90_000_000:95_000_000]
-    # if split == "test":
-    #     return ds[95_000_000:]
     if split == "train":
-        return ds[:5000]
+        return ds[:90_000_000]
     if split == "val":
-        return ds[5000:7000]
+        return ds[90_000_000:95_000_000]
     if split == "test":
-        return ds[7000:9000]
+        return ds[95_000_000:]
+
     raise ValueError("Invalid split")
 
 
