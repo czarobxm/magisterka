@@ -1,7 +1,9 @@
-import os
+# import os
 
-NEPTUNE_PROJECT = os.environ.get("NEPTUNE_PROJECT", "default_project")
-NEPTUNE_API_TOKEN = os.environ.get("NEPTUNE_API_TOKEN", "default_token")
+# NEPTUNE_PROJECT = os.environ.get("NEPTUNE_PROJECT", "default_project")
+# NEPTUNE_API_TOKEN = os.environ.get("NEPTUNE_API_TOKEN", "default_token")
+NEPTUNE_PROJECT = "masters/masters-first-experiments"
+NEPTUNE_API_TOKEN = "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJjMmNlZTYxMi0zZDA5LTQzZTItYmU0YS00ZDI0MDUzMDhiY2UifQ=="
 
 SPECIAL_TOKENS_DICT = {
     "eos_token": "[EOS]",
