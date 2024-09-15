@@ -87,7 +87,7 @@ class AttentionMechanism(nn.Module):
         causal: bool = False,
         inference: bool = False,
     ) -> torch.Tensor:
-        # Reshape query, key and value to from [B, L, D] to [..., L, D]
+        # Reshape query, key and value to from [B, L, D] to [B, Nh, L, Dh]
         query, key, value = self.attention_mechanism.multihead_reshape(
             query=query, key=key, value=value
         )

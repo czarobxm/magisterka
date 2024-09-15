@@ -37,7 +37,7 @@ def create_dataloaders(
             split=split,
             tokenizer=tokenizer,
             max_length=args.max_length,
-            prepare_dataset=args.task == "classification",
+            prepare_dataset=True,
             device=args.device if args.task != "classification" else None,
         )
         for split in ["train", "val", "test"]
