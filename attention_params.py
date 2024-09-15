@@ -23,6 +23,6 @@ def get_attention_params(args):
             random_features_gen=random_features_gen,
         )
     elif args.mha_type == "cosformer":
-        return CosformerParams(eps=args.eps)
+        return CosformerParams()
     else:
         raise NotImplementedError(f"{args.mha_type} attention is not implemented.")
