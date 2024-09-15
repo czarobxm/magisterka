@@ -46,7 +46,7 @@ def attention_causal_non_cuda(
     k_cum = torch.cumsum(key, dim=2)
     denom = torch.clamp_min(torch.einsum("bnlm,bnlm->bnl", query, k_cum), eps)
 
-    # TODO: Update internal states
+    # todo: Update internal states
     # kv_buffer[:, :, :] = kv_cum[:, :, -1, :, :]
     # k_buffer[:, :] = k_cum[:, :, -1, :]
 

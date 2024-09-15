@@ -1,3 +1,4 @@
+import logging
 from argparse import Namespace
 from typing import Union, Tuple
 
@@ -11,8 +12,6 @@ from transformer.layers.multi_head_attention.attention_mechanism.attn_params imp
     PerformerParams,
     VanillaParams,
 )
-
-import logging
 
 
 def setup_logging():
@@ -30,7 +29,6 @@ def create_dataloaders(
         else TextGenerationDataset
     )
     num_classes = 2 if args.task == "classification" else None
-
     datasets = {
         split: dataset_cls(
             args.dataset,
@@ -38,6 +36,7 @@ def create_dataloaders(
             tokenizer=tokenizer,
             max_length=args.max_length,
             prepare_dataset=True,
+            cache_dir="datastorage/enwik8",
             device=args.device if args.task != "classification" else None,
         )
         for split in ["train", "val", "test"]

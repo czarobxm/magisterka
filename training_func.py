@@ -57,7 +57,7 @@ def train_one_batch(
     inputs, targets = prepare_inputs_and_targets(data, task, model.device)
 
     start_fwd = time.time()
-    outputs = model(inputs).view(-1, model.d_model)
+    outputs = model(inputs).view(targets.shape[0], -1)
     end_fwd = time.time()
 
     loss = loss_fn(outputs, targets)
@@ -110,7 +110,7 @@ def evaluate_one_batch(
     data: torch.Tensor, model: nn.Module, loss_fn: nn.Module, task: str
 ) -> Tuple[float, int, int]:
     inputs, targets = prepare_inputs_and_targets(data, task, model.device)
-    outputs = model(inputs).view(-1, model.d_model)
+    outputs = model(inputs).view(targets.shape[0], -1)
     loss = loss_fn(outputs, targets)
     correct = (outputs.argmax(-1) == targets).sum().item()
     return loss.item(), correct, outputs.shape[0]

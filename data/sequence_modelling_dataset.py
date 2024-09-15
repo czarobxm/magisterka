@@ -96,7 +96,7 @@ class TextGenerationDataset(torch.utils.data.Dataset):
                 slices_sizes = [block_length] * n_chunks + [last_chunk_len]
             sliced_sentences.extend(torch.split(sentence, slices_sizes))
             last_chunk = sliced_sentences.pop(-1)
-        self.data = sliced_sentences
+        self.data = torch.vstack(sliced_sentences)
 
         return self.data
 
