@@ -48,8 +48,8 @@ def create_dataloaders(
         for split, dataset in datasets.items()
     }
 
-    if datasets["val"].texts is None:
-        dataloaders["val"] = dataloaders["test"]
+    # if datasets["val"].texts is None:
+    #     dataloaders["val"] = dataloaders["test"]
 
     return dataloaders["train"], dataloaders["val"], dataloaders["test"], num_classes
 
