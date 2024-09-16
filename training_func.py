@@ -182,7 +182,7 @@ def log_hyperparameters(model: nn.Module, args: Namespace, run: neptune.Run) -> 
         "epochs": args.epochs,
         "number_of_params": sum(
             p.nelement() for p in model.parameters()
-        ),  # TODO check if this is correct
+        ),  # T O D O check if this is correct
         "task": args.task,
         "dataset": args.dataset,
         "tokenizer": args.tokenizer,

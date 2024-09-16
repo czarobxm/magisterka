@@ -51,7 +51,7 @@ DEFAULT_ARGS = {
     "has_outproj": True,
     "act_fun": "relu",
     "apply_rotary_pos_enc": False,
-    "post_norm": True,
+    "post_norm": False,
     #
     # MODEL PARAMETERS
     "model": "decoder_only",

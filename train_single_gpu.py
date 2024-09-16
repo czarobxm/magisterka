@@ -21,6 +21,16 @@ from config import (
 )
 
 
+def t_or_f(arg):
+    ua = str(arg).upper()
+    if "TRUE".startswith(ua):
+        return True
+    elif "FALSE".startswith(ua):
+        return False
+    else:
+        raise ValueError(f"Invalid value for boolean: {arg}")
+
+
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Training parameters")
 
@@ -28,7 +38,7 @@ def parse_arguments() -> argparse.Namespace:
     for arg, value in DEFAULT_ARGS.items():
         arg_type = type(value) if value is not None else str
         if isinstance(value, bool):
-            parser.add_argument(f"--{arg}", action="store_true", help="")
+            parser.add_argument(f"--{arg}", type=t_or_f, default=value, help="")
         elif isinstance(value, list):
             parser.add_argument(f"--{arg}", nargs="+", type=int, default=value, help="")
         else:
@@ -91,7 +101,6 @@ def setup_training(args: argparse.Namespace, model: torch.nn.Module) -> Dict[str
 def main():
     args = parse_arguments()
     setup_logging()
-
     logging.info("Starting training script.")
 
     tokenizer = setup_tokenizer(args)
