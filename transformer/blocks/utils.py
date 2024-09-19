@@ -35,7 +35,9 @@ class DownsamplingLayer(nn.Module):
         """
         batch_size, seq_len, _ = x.size()
         new_seq_len = seq_len // self.downsampling_factor
-        x = x.view(batch_size, new_seq_len, self.downsampling_factor * self.d_model)
+        x = x.contiguous().view(
+            batch_size, new_seq_len, self.downsampling_factor * self.d_model
+        )
         return self.linear(x)
 
 
@@ -70,7 +72,9 @@ class UpsamplingLayer(nn.Module):
         """
         batch_size, seq_len, _ = x.size()
         x = self.linear(x)
-        return x.view(batch_size, seq_len * self.upsampling_factor, self.d_model)
+        return x.contiguous().view(
+            batch_size, seq_len * self.upsampling_factor, self.d_model
+        )
 
 
 class ShiftRight(nn.Module):

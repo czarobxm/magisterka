@@ -202,7 +202,7 @@ class Block(nn.Module):
         self,
         x: torch.Tensor,
         key_value: torch.Tensor = None,
-        causal: bool = False,
+        causal: bool = True,
         inference: bool = False,
     ) -> torch.Tensor:
         """Produces the output of the encoder block."""

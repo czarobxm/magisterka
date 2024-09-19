@@ -144,7 +144,9 @@ class HourglassBlock(nn.Module):
             x = downsample(x)
 
         # Middle block
-        x = self.decoder_chunks[n_downsampling_layers](x)
+        x = self.decoder_chunks[n_downsampling_layers](
+            x, causal=causal, inference=inference
+        )
 
         # Upsampling path
         for dec, upsample, residual in zip(
