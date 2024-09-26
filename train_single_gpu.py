@@ -13,7 +13,7 @@ from transformers import AutoTokenizer
 from training_func import train
 from utils import create_dataloaders, initialize_model
 from attention_params import get_attention_params
-from utils import setup_logging
+from utils import setup_logging, get_cosine_scheduler_with_warmup
 
 from config import (
     SPECIAL_TOKENS_DICT,
@@ -81,15 +81,16 @@ def setup_tokenizer(args: argparse.Namespace) -> AutoTokenizer:
 
 def setup_training(args: argparse.Namespace, model: torch.nn.Module) -> Dict[str, Any]:
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-    scheduler = (
-        torch.optim.lr_scheduler.MultiStepLR(
+    if args.scheduler:
+        scheduler = get_cosine_scheduler_with_warmup(
             optimizer,
-            gamma=args.scheduler_gamma,
-            milestones=args.scheduler_milestones,
+            num_all_steps=args.scheduler_num_all_steps,
+            num_warmup_steps=args.scheduler_lr_warmup_steps,
+            final_lr_fraction=args.scheduler_final_lr_fraction,
         )
-        if args.scheduler
-        else None
-    )
+    else:
+        scheduler = None
+
     loss_fn = (
         torch.nn.CrossEntropyLoss()
         if args.criterion == "cross_entropy"

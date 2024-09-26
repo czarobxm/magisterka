@@ -32,11 +32,13 @@ DEFAULT_ARGS = {
     # TRAINING PARAMETERS
     "lr": 0.00008,
     "epochs": 6,
-    "batch_size": 64,
+    "batch_size": 8,
     "criterion": "cross_entropy",
-    "scheduler": False,
-    "scheduler_gamma": 0.66,
-    "scheduler_milestones": [3, 6, 9, 12, 15],
+    # SCHEDULER PARAMETERS
+    "scheduler": True,
+    "scheduler_lr_warmup_steps": 10000,
+    "scheduler_num_all_steps": 1000000,
+    "scheduler_final_lr_fraction": 0.1,
     #
     # DATASET PARAMETERS
     "dataset": "enwik8",
@@ -47,7 +49,7 @@ DEFAULT_ARGS = {
     "d_model": 512,
     "num_heads": 8,
     "dropout": 0.1,
-    "max_length": 512,
+    "max_length": 4096,
     "has_outproj": True,
     "act_fun": "relu",
     "apply_rotary_pos_enc": False,

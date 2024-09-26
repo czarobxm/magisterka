@@ -18,16 +18,17 @@ def log_batch_neptune(
     total: int,
     forward_pass_time: float,
     grad_time: float,
-    calc_perplexity: bool = False,
+    n_iter: int,
+    lr: float,
 ) -> None:
     metrics = {
         f"{stage}_loss": loss,
         f"{stage}_batch_accuracy": correct / total,
         "forward_pass_time": forward_pass_time,
         "grad_time": grad_time,
+        "n_iter": n_iter,
+        "lr": lr,
     }
-    if calc_perplexity:
-        metrics[f"{stage}_batch_perplexity"] = torch.exp(torch.tensor(loss)).item()
 
     for key, value in metrics.items():
         run[f"metrics/{key}"].append(value)
@@ -77,9 +78,11 @@ def train_one_epoch(
     train_loader: DataLoader,
     model: nn.Module,
     optimizer: torch.optim.Optimizer,
+    scheduler: torch.optim.lr_scheduler.LRScheduler,
     loss_fn: nn.Module,
     run: neptune.Run,
     task: str,
+    n_iter: int = 0,
 ):
     running_loss = 0
     correct = 0
@@ -88,9 +91,13 @@ def train_one_epoch(
         loss, cor, tot, forward_pass_time, grad_time = train_one_batch(
             inputs, model, optimizer, loss_fn, task
         )
+        if scheduler is not None:
+            scheduler.step()
+        n_iter += 1
         running_loss += loss
         correct += cor
         total += tot
+        lr = optimizer.param_groups[0]["lr"]
         log_batch_neptune(
             stage="train",
             run=run,
@@ -99,11 +106,13 @@ def train_one_epoch(
             total=tot,
             forward_pass_time=forward_pass_time,
             grad_time=grad_time,
+            n_iter=n_iter,
+            lr=lr,
         )
 
     run["metrics/train_epoch_avg_loss"].append(running_loss / len(train_loader))
     run["metrics/train_epoch_accuracy"].append(correct / total)
-    return True
+    return n_iter
 
 
 def evaluate_one_batch(
@@ -157,14 +166,14 @@ def train(
     epochs: int = 10,
 ) -> None:
     log_hyperparameters(model, args, run)
-
+    n_iter = 0
     for epoch in range(epochs):
         print(f"Epoch {epoch+1}/{epochs}")
         print(f"Learning rate: {optimizer.param_groups[0]['lr']}")
 
-        train_one_epoch(train_loader, model, optimizer, loss_fn, run, task)
-        if scheduler:
-            scheduler.step()
+        n_iter = train_one_epoch(
+            train_loader, model, optimizer, scheduler, loss_fn, run, task, n_iter
+        )
 
         evaluate_one_epoch(val_loader, model, loss_fn, run, task, "val")
 

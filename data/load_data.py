@@ -19,11 +19,13 @@ def dataset_loader(dataset_name: str, split: str, cache_dir: str = None) -> Tupl
     """
     if dataset_name == "imdb":
         return load_imdb(cache_dir=cache_dir, split=split)
-    if dataset_name == "wikitext-103":
+    elif dataset_name == "wikitext-103":
         return load_wikitext103(cache_dir=cache_dir, split=split)
-    if dataset_name == "enwik8":
+    elif dataset_name == "enwik8":
         return load_enwik8(cache_dir=cache_dir, split=split)
-    if dataset_name == "cifar10":
+    elif dataset_name == "enwik9":
+        return load_enwik9(cache_dir=cache_dir, split=split)
+    elif dataset_name == "cifar10":
         return load_cifar10(cache_dir=cache_dir, split=split)
     raise ValueError("Invalid dataset name")
 
@@ -63,14 +65,13 @@ def load_enwik8(split: str = "train", cache_dir: str = None):
 
     if not os.path.exists(cache_dir + "/enwik8"):
         urllib.request.urlretrieve(
-            "http://mattmahoney.net/dc/enwik8.zip", cache_dir + ".zip"
+            "http://mattmahoney.net/dc/enwik8.zip", cache_dir + "/enwik8.zip"
         )
-        with zipfile.ZipFile(cache_dir + ".zip", "r") as zip_ref:
+        with zipfile.ZipFile(cache_dir + "/enwik8.zip", "r") as zip_ref:
             zip_ref.extractall(cache_dir)
-        os.remove(cache_dir + ".zip")
+        os.remove(cache_dir + "/enwik8.zip")
 
     with open(cache_dir + "/enwik8", "r", encoding="utf-8") as file:
-        print("a")
         ds = file.read()
     if split == "train":
         return ds[:90_000_000]
@@ -78,6 +79,33 @@ def load_enwik8(split: str = "train", cache_dir: str = None):
         return ds[90_000_000:95_000_000]
     if split == "test":
         return ds[95_000_000:]
+
+    raise ValueError("Invalid split")
+
+
+def load_enwik9(split: str = "train", cache_dir: str = None):
+    """https://huggingface.co/datasets/LTCB/enwik8"""
+    if cache_dir is None:
+        cache_dir = os.path.abspath("./datastorage/enwik9")
+    os.makedirs(cache_dir, exist_ok=True)
+
+    if not os.path.exists(cache_dir + "/enwik9"):
+        urllib.request.urlretrieve(
+            "http://mattmahoney.net/dc/enwik9.zip", cache_dir + "/enwik9.zip"
+        )
+        with zipfile.ZipFile(cache_dir + "/enwik9.zip", "r") as zip_ref:
+            zip_ref.extractall(cache_dir)
+        os.remove(cache_dir + "/enwik9.zip")
+
+    with open(cache_dir + "/enwik9", "r", encoding="utf-8") as file:
+        print("a")
+        ds = file.read()
+    if split == "train":
+        return ds[:900_000_000]
+    if split == "val":
+        return ds[900_000_000:950_000_000]
+    if split == "test":
+        return ds[950_000_000:]
 
     raise ValueError("Invalid split")
 
