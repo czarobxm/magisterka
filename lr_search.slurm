@@ -5,7 +5,7 @@
 #SBATCH --partition=common
 #SBATCH --qos=1gpu1d
 #SBATCH --gres=gpu:1
-#SBATCH --output=output/"test_$(date +%F--%T).txt"
+#SBATCH --output=output/lr_search_%j.out
 
 param1=$1
 cosformer="cosformer"
