@@ -1,5 +1,8 @@
 """This module contains dataset class for text generation task."""
 
+import logging
+
+
 import torch
 from transformers import PreTrainedTokenizer
 
@@ -24,6 +27,7 @@ class TextGenerationDataset(torch.utils.data.Dataset):
     ):
         super().__init__()
         dataset = dataset_loader(dataset_name, split, cache_dir=cache_dir)
+        logging.info("Dataset loaded")
         self.data = dataset
         self.split = split
         self.device = device
@@ -34,8 +38,10 @@ class TextGenerationDataset(torch.utils.data.Dataset):
         self.max_length = max_length
 
         self._tolist()
+        logging.info("Dataset converted to list")
 
         if prepare_dataset:
+            logging.info("Preparing dataset")
             self.prepare_dataset()
 
     def to(self, device: str):
@@ -52,10 +58,15 @@ class TextGenerationDataset(torch.utils.data.Dataset):
         """Prepare dataset to be used in model"""
         if self.data is not None:
             self.tokenize()
+            logging.info("Dataset tokenized")
             self.slice_sentences()
+            logging.info("Dataset sliced")
             self.pad_sentences()
+            logging.info("Dataset padded")
             self.shuffle()
+            logging.info("Dataset shuffled")
             self.to(self.device)
+            logging.info("Dataset moved to device")
 
     def _tolist(self):
         if isinstance(self.data, str):
