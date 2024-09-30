@@ -18,6 +18,7 @@ class TextGenerationDataset(torch.utils.data.Dataset):
     def __init__(
         self,
         dataset_name: str = None,
+        dataset: str = None,
         split: str = "train",
         tokenizer: PreTrainedTokenizer = None,
         max_length: int = 512,
@@ -25,9 +26,13 @@ class TextGenerationDataset(torch.utils.data.Dataset):
         device: str = "cpu",
     ):
         super().__init__()
-        dataset = dataset_loader(dataset_name, split, cache_dir=cache_dir)
+        logging.info("Loading dataset")
+        if dataset_name is not None and dataset is None:
+            self.data = dataset_loader(dataset_name, split, cache_dir=cache_dir)
+            self._tolist()
+        elif dataset is not None and dataset_name is None:
+            self.data = dataset
         logging.info("Dataset loaded")
-        self.data = dataset
         self.split = split
         self.device = device
 
@@ -35,9 +40,6 @@ class TextGenerationDataset(torch.utils.data.Dataset):
         self.attention_masks = None
         self.token_type_ids = None
         self.max_length = max_length
-
-        self._tolist()
-        logging.info("Dataset converted to list")
 
     def to(self, device: str):
         """Move data to device"""
@@ -60,6 +62,7 @@ class TextGenerationDataset(torch.utils.data.Dataset):
 
     def _tolist(self):
         if isinstance(self.data, str):
+            print("str")
             return self.data
         self.data = [row["text"] for row in self.data]
         return self.data

@@ -75,12 +75,13 @@ def load_enwik8(split: str = "train", cache_dir: str = None):
         ds = file.read()
     if split == "train":
         return ds[:90_000_000]
-    if split == "val":
+    elif split == "val":
         return ds[90_000_000:95_000_000]
-    if split == "test":
+    elif split == "test":
         return ds[95_000_000:]
-
-    raise ValueError("Invalid split")
+    elif split == "all":
+        return ds[:90_000_000], ds[90_000_000:95_000_000], ds[95_000_000:]
+    raise ValueError(f"Invalid split: {split}")
 
 
 def load_enwik9(split: str = "train", cache_dir: str = None):
@@ -98,15 +99,16 @@ def load_enwik9(split: str = "train", cache_dir: str = None):
         os.remove(cache_dir + "/enwik9.zip")
 
     with open(cache_dir + "/enwik9", "r", encoding="utf-8") as file:
-        print("a")
         ds = file.read()
+
     if split == "train":
         return ds[:900_000_000]
-    if split == "val":
+    elif split == "val":
         return ds[900_000_000:950_000_000]
-    if split == "test":
+    elif split == "test":
         return ds[950_000_000:]
-
+    elif split == "all":
+        return ds[:900_000_000], ds[900_000_000:950_000_000], ds[950_000_000:]
     raise ValueError("Invalid split")
 
 
