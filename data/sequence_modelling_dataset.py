@@ -26,11 +26,13 @@ class TextGenerationDataset(torch.utils.data.Dataset):
         device: str = "cpu",
     ):
         super().__init__()
-        logging.info("Loading dataset")
+
         if dataset_name is not None and dataset is None:
+            logging.info("Loading dataset dataset loader")
             self.data = dataset_loader(dataset_name, split, cache_dir=cache_dir)
             self._tolist()
         elif dataset is not None and dataset_name is None:
+            logging.info("Loading dataset ready string")
             self.data = dataset
         logging.info("Dataset loaded")
         self.split = split
