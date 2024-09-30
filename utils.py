@@ -38,8 +38,7 @@ def create_dataloaders(
             split=split,
             tokenizer=tokenizer,
             max_length=args.max_length,
-            prepare_dataset=True,
-            cache_dir="datastorage/enwik8",
+            cache_dir=f"datastorage/{args.dataset}",
             device=args.device if args.task != "classification" else None,
         )
         for split in ["train", "val", "test"]
