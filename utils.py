@@ -3,12 +3,13 @@ from argparse import Namespace
 from typing import Union, Tuple
 import math
 
-import torch
 from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
+from data.load_data import dataset_loader
 
-from data import TextClassificationDataset, TextGenerationDataset
+
+from data import TextGenerationDataset
 from models import ClassifierTransformer, DecoderOnlyTransformer
 from transformer.layers.multi_head_attention.attention_mechanism.attn_params import (
     CosformerParams,
@@ -26,33 +27,31 @@ def setup_logging():
 def create_dataloaders(
     args: Namespace, tokenizer: AutoTokenizer
 ) -> Tuple[DataLoader, DataLoader, DataLoader, int]:
-    dataset_cls = (
-        TextClassificationDataset
-        if args.task == "classification"
-        else TextGenerationDataset
-    )
+    dataset_cls = TextGenerationDataset
+
     num_classes = 2 if args.task == "classification" else None
+    train_data, val_data, test_data = dataset_loader(
+        "enwik9", split="all", cache_dir=f"datastorage/{args.dataset}"
+    )
+
     datasets = {
         split: dataset_cls(
-            args.dataset,
+            dataset=data,
             split=split,
             tokenizer=tokenizer,
             max_length=args.max_length,
-            cache_dir=f"datastorage/{args.dataset}",
             device=args.device if args.task != "classification" else None,
         )
-        for split in ["train", "val", "test"]
+        for split, data in zip(
+            ["train", "val", "test"], [train_data, val_data, test_data]
+        )
     }
 
-    dataloaders = {
-        split: DataLoader(dataset, batch_size=args.batch_size)
-        for split, dataset in datasets.items()
-    }
+    train_loader = DataLoader(datasets["train"], batch_size=args.batch_size)
+    val_loader = DataLoader(datasets["val"], batch_size=args.batch_size)
+    test_loader = DataLoader(datasets["test"], batch_size=args.batch_size)
 
-    # if datasets["val"].texts is None:
-    #     dataloaders["val"] = dataloaders["test"]
-
-    return dataloaders["train"], dataloaders["val"], dataloaders["test"], num_classes
+    return train_loader, val_loader, test_loader, num_classes
 
 
 def initialize_model(
