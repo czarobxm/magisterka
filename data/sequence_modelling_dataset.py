@@ -6,8 +6,6 @@ import logging
 import torch
 from transformers import PreTrainedTokenizer
 
-from data.load_data import dataset_loader
-
 
 class TextGenerationDataset(torch.utils.data.Dataset):
     """
