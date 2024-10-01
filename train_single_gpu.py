@@ -80,7 +80,7 @@ def setup_tokenizer(args: argparse.Namespace) -> AutoTokenizer:
 
 
 def setup_training(args: argparse.Namespace, model: torch.nn.Module) -> Dict[str, Any]:
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.init_lr)
     if args.scheduler:
         scheduler = get_cosine_scheduler_with_warmup(
             optimizer,

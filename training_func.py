@@ -184,17 +184,18 @@ def train(
 
 def log_hyperparameters(model: nn.Module, args: Namespace, run: neptune.Run) -> None:
     run["model_params"] = model.get_hyperparams()
-    run["global_params"] = {"seed": args.seed, "device": args.device}
     run["training_params"] = {
-        "lr": args.lr,
+        "init_lr": args.init_lr,
         "batch_size": args.batch_size,
         "epochs": args.epochs,
-        "number_of_params": sum(
-            p.nelement() for p in model.parameters()
-        ),  # T O D O check if this is correct
+        "scheduler": args.scheduler,
+        "scheduler_lr_warmup_steps": args.scheduler_lr_warmup_steps,
+        "scheduler_num_all_steps": args.scheduler_num_all_steps,
+        "scheduler_final_lr_fraction": args.scheduler_final_lr_fraction,
         "task": args.task,
         "dataset": args.dataset,
         "tokenizer": args.tokenizer,
+        "max_length": args.max_length,
     }
 
 

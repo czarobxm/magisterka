@@ -95,20 +95,23 @@ class BaseModel(nn.Module):
     def get_hyperparams(self):
         """Return hyperparameters of the model."""
         params_dict = {
-            "d_model": self.d_model,
-            "vocab_size": self.vocab_size,
+            # Model parameters
             "structure": self.structure,
+            "vocab_size": self.vocab_size,
+            "use_embedding": self.use_embedding,
+            "embedder_type": "learnable",
+            "pos_enc_type": self.pos_enc_type,
+            "number_of_params": sum(p.numel() for p in self.parameters()),
+            "device": self.device,
+            # MHA parameters
+            "mha_type": self.method_params.method,
+            "d_model": self.d_model,
             "num_heads": self.num_heads,
-            "method_params": self.method_params.method,
-            "apply_rotary_pos_enc": self.apply_rotary_pos_enc,
             "dropout": self.dropout,
             "attn_has_outproj": self.attn_has_outproj,
-            "pos_enc_type": self.pos_enc_type,
             "act_fun": self.act_fun_name,
+            "apply_rotary_pos_enc": self.apply_rotary_pos_enc,
             "post_norm": self.post_norm,
-            "embedder_type": "learnable",
-            "use_embedding": self.use_embedding,
-            "device": self.device,
         }
 
         return params_dict

@@ -7,15 +7,17 @@
 #SBATCH --gres=gpu:1
 #SBATCH --output=output/lr_search_%j.out
 
-param1=$1
-cosformer="cosformer"
 
+param1=$1 # mha type
+param2=$2 # lr
+param3=$3 # structure
+
+cosformer="cosformer"
 if [ "$param1" == "$cosformer" ]; then
     act_fun="relu"
 else
     act_fun="none"
 fi
-param2=$2
 
 poetry run python3 train_single_gpu.py \
  --task sequence_modelling \
@@ -25,9 +27,11 @@ poetry run python3 train_single_gpu.py \
  --device cuda \
  --mha_type $param1 \
  --act_fun $act_fun \
- --structure 8x4096 \
- --batch_size 8 \
+ --structure $param3 \
+ --batch_size 2 \
  --epochs 2 \
  --lr $param2 \
  --tokenizer google/byt5-small \
  --post_norm false
+
+
