@@ -11,6 +11,8 @@
 param1=$1 # mha type
 param2=$2 # lr
 param3=$3 # structure
+param4=$4 # max_length
+param5=$5 # batch_size
 
 cosformer="cosformer"
 if [ "$param1" == "$cosformer" ]; then
@@ -28,7 +30,8 @@ poetry run python3 train_single_gpu.py \
  --mha_type $param1 \
  --act_fun $act_fun \
  --structure $param3 \
- --batch_size 2 \
+ --max_length $param4 \
+ --batch_size $param5 \
  --epochs 2 \
  --init_lr $param2 \
  --tokenizer google/byt5-small \
