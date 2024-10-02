@@ -32,7 +32,7 @@ poetry run python3 train_single_gpu.py \
  --structure $param3 \
  --max_length $param4 \
  --batch_size $param5 \
- --epochs 2 \
+ --epochs 1 \
  --init_lr $param2 \
  --tokenizer google/byt5-small \
  --post_norm false

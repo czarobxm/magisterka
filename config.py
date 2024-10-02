@@ -31,8 +31,8 @@ DEFAULT_ARGS = {
     "criterion": "cross_entropy",
     # SCHEDULER PARAMETERS
     "scheduler": True,
-    "scheduler_lr_warmup_steps": int(1_000_000_000 / (4096 * 2)) * 0.01,
-    "scheduler_num_all_steps": int(1_000_000_000 / (4096 * 2)),
+    "scheduler_lr_warmup_steps": int(1_000_000_000 / 4096) * 0.01,
+    "scheduler_num_all_steps": int(1_000_000_000 / 4096),
     "scheduler_final_lr_fraction": 0.1,
     #
     # DATASET PARAMETERS
