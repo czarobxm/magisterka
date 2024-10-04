@@ -38,7 +38,7 @@ class TextGenerationDataset(torch.utils.data.Dataset):
                 len(self.data) // self.max_length + 1
             ).tolist()
         else:
-            self.shuffled_order = list(range(len(self.data) // self.max_length + 1))
+            self.shuffled_order = None
 
     def to(self, device: str):
         """Move data to device"""
@@ -50,9 +50,10 @@ class TextGenerationDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         if index > len(self):
             raise IndexError("Index out of range")
-        random_index = self.shuffled_order[index]
-        start_idx = random_index * self.max_length
-        end_idx = (random_index + 1) * self.max_length - 1
+        if self.shuffled_order is not None:
+            index = self.shuffled_order[index]
+        start_idx = index * self.max_length
+        end_idx = (index + 1) * self.max_length - 1
         token_dict = self.tokenizer(
             self.data[start_idx:end_idx],
             padding="max_length",
