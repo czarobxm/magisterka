@@ -52,6 +52,7 @@ def train_one_batch(
     model: nn.Module,
     optimizer: torch.optim.Optimizer,
     loss_fn: nn.Module,
+    update_weights: bool,
     task: str,
 ) -> Tuple[float, int, int, float, float]:
     optimizer.zero_grad()
@@ -65,7 +66,8 @@ def train_one_batch(
 
     start_grad = time.time()
     loss.backward()
-    optimizer.step()
+    if update_weights:
+        optimizer.step()
     end_grad = time.time()
 
     correct = (outputs.argmax(-1) == targets).sum().item()
@@ -80,6 +82,7 @@ def train_one_epoch(
     optimizer: torch.optim.Optimizer,
     scheduler: torch.optim.lr_scheduler.LRScheduler,
     loss_fn: nn.Module,
+    gradient_accumulation_steps: int,
     run: neptune.Run,
     task: str,
     n_iter: int = 0,
@@ -87,9 +90,18 @@ def train_one_epoch(
     running_loss = 0
     correct = 0
     total = 0
+    accumulated_steps = 0
+
     for inputs in tqdm(train_loader, "Training:"):
+        if accumulated_steps == gradient_accumulation_steps - 1:
+            update_weights = True
+            accumulated_steps = 0
+        else:
+            update_weights = False
+            accumulated_steps += 1
+
         loss, cor, tot, forward_pass_time, grad_time = train_one_batch(
-            inputs, model, optimizer, loss_fn, task
+            inputs, model, optimizer, loss_fn, update_weights, task
         )
         if scheduler is not None:
             scheduler.step()
@@ -172,7 +184,15 @@ def train(
         print(f"Learning rate: {optimizer.param_groups[0]['lr']}")
 
         n_iter = train_one_epoch(
-            train_loader, model, optimizer, scheduler, loss_fn, run, task, n_iter
+            train_loader,
+            model,
+            optimizer,
+            scheduler,
+            loss_fn,
+            args.gradient_accumulation_steps,
+            run,
+            task,
+            n_iter,
         )
 
         evaluate_one_epoch(val_loader, model, loss_fn, run, task, "val")

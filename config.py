@@ -28,6 +28,7 @@ DEFAULT_ARGS = {
     "init_lr": 0.00008,
     "epochs": 6,
     "batch_size": 2,
+    "gradient_accumulation_steps": 1,
     "criterion": "cross_entropy",
     # SCHEDULER PARAMETERS
     "scheduler": True,

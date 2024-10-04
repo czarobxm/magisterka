@@ -32,16 +32,23 @@ class TextGenerationDataset(torch.utils.data.Dataset):
         self.token_type_ids = None
         self.max_length = max_length
 
+        self.shuffled_order = torch.randperm(
+            len(self.data) // self.max_length + 1
+        ).tolist()
+
     def to(self, device: str):
         """Move data to device"""
         self.data = self.data.to(device)
 
     def __len__(self):
-        return int(len(self.data) // self.max_length)
+        return int(len(self.data) // self.max_length) + 1
 
     def __getitem__(self, index):
-        start_idx = index * self.max_length
-        end_idx = (index + 1) * self.max_length - 1
+        if index > len(self):
+            raise IndexError("Index out of range")
+        random_index = self.shuffled_order[index]
+        start_idx = random_index * self.max_length
+        end_idx = (random_index + 1) * self.max_length - 1
         token_dict = self.tokenizer(
             self.data[start_idx:end_idx],
             padding="max_length",

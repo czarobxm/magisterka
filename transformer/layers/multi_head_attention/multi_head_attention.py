@@ -93,7 +93,7 @@ class MultiHeadAttention(nn.Module):
         query: torch.Tensor,
         key: torch.Tensor,
         value: torch.Tensor,
-        causal: bool = False,
+        causal: bool = True,
         inference: bool = False,
     ) -> torch.Tensor:
         """
