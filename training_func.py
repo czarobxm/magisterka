@@ -207,6 +207,7 @@ def log_hyperparameters(model: nn.Module, args: Namespace, run: neptune.Run) -> 
     run["training_params"] = {
         "init_lr": args.init_lr,
         "batch_size": args.batch_size,
+        "gradient_accumulation_steps": args.gradient_accumulation_steps,
         "epochs": args.epochs,
         "scheduler": args.scheduler,
         "scheduler_lr_warmup_steps": args.scheduler_lr_warmup_steps,
