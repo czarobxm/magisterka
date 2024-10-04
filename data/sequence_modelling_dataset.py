@@ -19,6 +19,7 @@ class TextGenerationDataset(torch.utils.data.Dataset):
         split: str = "train",
         tokenizer: PreTrainedTokenizer = None,
         max_length: int = 512,
+        shuffle: bool = True,
         device: str = "cpu",
     ):
         super().__init__()
@@ -32,9 +33,12 @@ class TextGenerationDataset(torch.utils.data.Dataset):
         self.token_type_ids = None
         self.max_length = max_length
 
-        self.shuffled_order = torch.randperm(
-            len(self.data) // self.max_length + 1
-        ).tolist()
+        if shuffle:
+            self.shuffled_order = torch.randperm(
+                len(self.data) // self.max_length + 1
+            ).tolist()
+        else:
+            self.shuffled_order = list(range(len(self.data) // self.max_length + 1))
 
     def to(self, device: str):
         """Move data to device"""
