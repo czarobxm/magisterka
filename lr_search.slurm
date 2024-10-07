@@ -3,7 +3,7 @@
 #SBATCH --job-name=lr_search
 #SBATCH --time=1-0
 #SBATCH --partition=common
-#SBATCH --qos=1gpu1d
+#SBATCH --qos=4gpu1d
 #SBATCH --gres=gpu:1
 #SBATCH --output=output/lr_search_%j.out
 
