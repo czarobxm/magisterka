@@ -55,7 +55,7 @@ def train_one_batch(
     update_weights: bool,
     task: str,
 ) -> Tuple[float, int, int, float, float]:
-    optimizer.zero_grad()
+
     inputs, targets = prepare_inputs_and_targets(data, task, model.device)
 
     start_fwd = time.time()
@@ -68,6 +68,7 @@ def train_one_batch(
     loss.backward()
     if update_weights:
         optimizer.step()
+        optimizer.zero_grad()
     end_grad = time.time()
 
     correct = (outputs.argmax(-1) == targets).sum().item()
