@@ -193,9 +193,12 @@ class HourglassBlock(nn.Module):
             x = self.shift_right_layers[i](x)
             x_downsampled = downsample(x)
             if self.attention_downsampling:
-                x = self.attention_downsampling_layers[i](x_downsampled, key=x, value=x)
-            else:
-                x = dec(x_downsampled, causal=causal, inference=inference)
+                x_downsampled = self.attention_downsampling_layers[i](
+                    x_downsampled, key=x, value=x
+                )
+
+            x = dec(x_downsampled, causal=causal, inference=inference)
+
             if i < n_downsampling_layers - 1:
                 residuals.append(x)
 
@@ -207,18 +210,16 @@ class HourglassBlock(nn.Module):
                 reversed(residuals),
             )
         ):
+            x_upsampled = upsample(x)
+
             if self.upsampling_residual:
-                x_upsampled = residual + upsample(x)
-            else:
-                x_upsampled = upsample(x)
+                x_upsampled = residual + x_upsampled
 
             if self.attention_upsampling:
-                x = x_upsampled + self.attention_upsampling_layers[i](
+                x_upsampled = x_upsampled + self.attention_upsampling_layers[i](
                     x_upsampled, key=x, value=x
                 )
-            else:
-                x = dec(x_upsampled, causal=causal, inference=inference)
 
-            x = dec(x, causal=causal, inference=inference)
+            x = dec(x_upsampled, causal=causal, inference=inference)
 
         return x

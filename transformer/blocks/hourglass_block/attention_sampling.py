@@ -10,12 +10,14 @@ class AttentionDownsampling(nn.Module):
         self.downsampling_factor = downsampling_factor
         self.d_model = d_model
 
+        self.norm1 = nn.LayerNorm(self.d_model)
+        self.norm2 = nn.LayerNorm(self.d_model)
         self.avg_pool = nn.AvgPool1d(
             kernel_size=downsampling_factor, stride=downsampling_factor
         )
         self.ffn = FeedForward(d_model=d_model, hidden=4 * d_model, drop_prob=0.0)
 
-    def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
+    def attention(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
         batch_size, seq_len, d_model = key.size()
         key = key.view(
             batch_size,
@@ -25,8 +27,15 @@ class AttentionDownsampling(nn.Module):
         )
         weights = torch.einsum("bsd,bsfd->bsf", query, key).flatten(1)
         attn_output = torch.einsum("bs,bsd->bsd", weights, value)
-        attn_output = self.avg_pool(attn_output.transpose(-1, -2)).transpose(-2, -1)
-        return self.ffn(attn_output)
+        return self.avg_pool(attn_output.transpose(-1, -2)).transpose(-2, -1)
+
+    def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
+        attn_output = query + self.attention(
+            self.norm1(query), self.norm1(key), self.norm1(value)
+        )
+        ffn_output = attn_output + self.ffn(attn_output)
+
+        return ffn_output
 
 
 class AttentionUpsampling(nn.Module):
@@ -35,9 +44,12 @@ class AttentionUpsampling(nn.Module):
         self.upsampling_factor = upsampling_factor
         self.d_model = d_model
 
+        self.norm1 = nn.LayerNorm(self.d_model)
+        self.norm2 = nn.LayerNorm(self.d_model)
+
         self.ffn = FeedForward(d_model=d_model, hidden=4 * d_model, drop_prob=0.0)
 
-    def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
+    def attention(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
         batch_size, seq_len, d_model = query.size()
         query = query.view(
             batch_size,
@@ -47,5 +59,11 @@ class AttentionUpsampling(nn.Module):
         )
         weights = torch.einsum("bsfd,bsd->bsf", query, key)
         attn_output = torch.einsum("bsf,bsd->bsfd", weights, value)
-        attn_output = attn_output.view(batch_size, seq_len, d_model)
-        return self.ffn(attn_output)
+        return attn_output.view(batch_size, seq_len, d_model)
+
+    def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
+        attn_output = query + self.attention(
+            self.norm1(query), self.norm1(key), self.norm1(value)
+        )
+        ffn_output = attn_output + self.norm2(self.ffn(attn_output))
+        return ffn_output
