@@ -194,7 +194,6 @@ class HourglassBlock(nn.Module):
             x_downsampled = downsample(x)
             if self.attention_downsampling:
                 x = self.attention_downsampling_layers[i](x_downsampled, key=x, value=x)
-                print(x.shape, x_downsampled.shape)
             else:
                 x = dec(x_downsampled, causal=causal, inference=inference)
             if i < n_downsampling_layers - 1:

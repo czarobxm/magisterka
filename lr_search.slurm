@@ -14,6 +14,9 @@ param3=$3 # structure
 param4=$4 # max_length
 param5=$5 # batch_size
 param6=$6 # gradient_accumulation_steps
+param7=$7 # hourglass_downsampling_type
+param8=$8 # hourglass_upsampling_type
+
 
 cosformer="cosformer"
 if [ "$param1" == "$cosformer" ]; then
@@ -37,10 +40,10 @@ poetry run python3 train_single_gpu.py \
  --epochs 1 \
  --init_lr $param2 \
  --tokenizer google/byt5-small \
- --hourglass_downsampling_type "avg" \
- --hourglass_upsampling_type "linear" \
- --hourglass_attention_downsampling true \
- --hourglass_attention_upsampling true \
- --hourglass_upsampling_residual true \
+ --hourglass_downsampling_type $param7 \
+ --hourglass_upsampling_type $param8 \
+ --hourglass_attention_downsampling false \
+ --hourglass_attention_upsampling false \
+ --hourglass_upsampling_residual false \
 
 
