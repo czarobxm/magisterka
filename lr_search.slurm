@@ -42,6 +42,5 @@ poetry run python3 train_single_gpu.py \
  --hourglass_attention_downsampling true \
  --hourglass_attention_upsampling true \
  --hourglass_upsampling_residual true \
- --hourglass_post_norm false
 
 
