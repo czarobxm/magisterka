@@ -3,14 +3,20 @@ from typing import Union, List, Optional
 import torch
 from torch import nn
 
-from transformer.layers.multi_head_attention.attention_mechanism.attn_params import (
+from transformer.multi_head_attention.attention_mechanism.attn_params import (
     LinearAttnParams,
     VanillaParams,
     PerformerParams,
     CosformerParams,
 )
-from transformer.blocks.block import Block
-from transformer.blocks.utils import ShiftRight, DownsamplingLayer, UpsamplingLayer
+from transformer.blocks.transformer_block import Block
+from transformer.blocks.hourglass_block.utils import ShiftRight
+from transformer.blocks.hourglass_block.downsampling import DownsamplingLayer
+from transformer.blocks.hourglass_block.upsampling import UpsamplingLayer
+from transformer.blocks.hourglass_block.attention_sampling import (
+    AttentionDownsampling,
+    AttentionUpsampling,
+)
 
 
 class HourglassBlock(nn.Module):
@@ -36,15 +42,31 @@ class HourglassBlock(nn.Module):
         has_outproj: bool = True,
         act_fun: nn.Module = None,
         post_norm: bool = False,
+        downsampling_type: str = "avg",
+        upsampling_type: str = "linear",
+        attention_downsampling: bool = True,
+        attention_upsampling: bool = True,
+        upsampling_residual: bool = True,
         device: str = "cpu",
     ) -> None:
         super().__init__()
-        super().__init__()
         self.d_model = d_model
         self.sizes = sizes
+        self.downsampling_type = downsampling_type
+        self.upsampling_type = upsampling_type
+        self.attention_downsampling = attention_downsampling
+        self.attention_upsampling = attention_upsampling
+        self.upsampling_residual = upsampling_residual
         self.device = device
 
         self._validate_inputs(n_layers, sizes)
+
+        if self.attention_downsampling:
+            self.attention_downsampling_layers = (
+                self._create_attention_downsampling_layers()
+            )
+        if self.attention_upsampling:
+            self.attention_upsampling_layers = self._create_attention_upsampling_layers()
 
         self.downsampling_layers, self.upsampling_layers = self._create_sampling_layers()
         self.shift_right_layers = self._create_shift_right_layers()
@@ -70,6 +92,28 @@ class HourglassBlock(nn.Module):
             else:
                 assert sizes[i + 1] % sizes[i] == 0, "Adjacent sizes must be divisible"
 
+    def _create_attention_downsampling_layers(self) -> nn.ModuleList:
+        """Create attention downsamplinglayers."""
+        attention_downsampling_layers = nn.ModuleList()
+        for i in range(len(self.sizes) - 1):
+            if self.sizes[i] > self.sizes[i + 1]:
+                factor = self.sizes[i] // self.sizes[i + 1]
+                attention_downsampling_layers.append(
+                    AttentionDownsampling(self.d_model, factor)
+                )
+        return attention_downsampling_layers
+
+    def _create_attention_upsampling_layers(self) -> nn.ModuleList:
+        """Create attention upsampling layers."""
+        attention_upsampling_layers = nn.ModuleList()
+        for i in range(len(self.sizes) - 1):
+            if self.sizes[i] <= self.sizes[i + 1]:
+                factor = self.sizes[i + 1] // self.sizes[i]
+                attention_upsampling_layers.append(
+                    AttentionUpsampling(self.d_model, factor)
+                )
+        return attention_upsampling_layers
+
     def _create_sampling_layers(self) -> nn.ModuleList:
         """Create downsampling and upsampling layers."""
         downsampling_layers = nn.ModuleList()
@@ -77,10 +121,15 @@ class HourglassBlock(nn.Module):
         for i in range(len(self.sizes) - 1):
             if self.sizes[i] > self.sizes[i + 1]:
                 factor = self.sizes[i] // self.sizes[i + 1]
-                downsampling_layers.append(DownsamplingLayer(self.d_model, factor))
+                downsampling_layers.append(
+                    DownsamplingLayer(self.d_model, factor, self.downsampling_type)
+                )
             else:
                 factor = self.sizes[i + 1] // self.sizes[i]
-                upsampling_layers.append(UpsamplingLayer(self.d_model, factor))
+                print("asd:", self.upsampling_type)
+                upsampling_layers.append(
+                    UpsamplingLayer(self.d_model, factor, self.upsampling_type)
+                )
         return downsampling_layers, upsampling_layers
 
     def _create_shift_right_layers(self) -> nn.ModuleList:
@@ -131,31 +180,46 @@ class HourglassBlock(nn.Module):
 
         n_downsampling_layers = len(self.downsampling_layers)
 
+        x = self.decoder_chunks[0](x, causal=causal, inference=inference)
+        residuals.append(x)
+
         # Downsampling path
         for i, (dec, downsample) in enumerate(
             zip(
-                self.decoder_chunks[:n_downsampling_layers],
+                self.decoder_chunks[1 : n_downsampling_layers + 1],
                 self.downsampling_layers,
             )
         ):
-            x = dec(x, causal=causal, inference=inference)
-            residuals.append(x)
             x = self.shift_right_layers[i](x)
-            x = downsample(x)
-
-        # Middle block
-        x = self.decoder_chunks[n_downsampling_layers](
-            x, causal=causal, inference=inference
-        )
+            x_downsampled = downsample(x)
+            if self.attention_downsampling:
+                x = self.attention_downsampling_layers[i](x_downsampled, key=x, value=x)
+                print(x.shape, x_downsampled.shape)
+            else:
+                x = dec(x_downsampled, causal=causal, inference=inference)
+            if i < n_downsampling_layers - 1:
+                residuals.append(x)
 
         # Upsampling path
-        for dec, upsample, residual in zip(
-            self.decoder_chunks[n_downsampling_layers:],
-            self.upsampling_layers,
-            reversed(residuals),
+        for i, (dec, upsample, residual) in enumerate(
+            zip(
+                self.decoder_chunks[n_downsampling_layers:],
+                self.upsampling_layers,
+                reversed(residuals),
+            )
         ):
-            x = upsample(x)
-            x = x + residual
+            if self.upsampling_residual:
+                x_upsampled = residual + upsample(x)
+            else:
+                x_upsampled = upsample(x)
+
+            if self.attention_upsampling:
+                x = x_upsampled + self.attention_upsampling_layers[i](
+                    x_upsampled, key=x, value=x
+                )
+            else:
+                x = dec(x_upsampled, causal=causal, inference=inference)
+
             x = dec(x, causal=causal, inference=inference)
 
         return x

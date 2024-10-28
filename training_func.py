@@ -196,7 +196,8 @@ def train(
             n_iter,
         )
 
-        evaluate_one_epoch(val_loader, model, loss_fn, run, task, "val")
+        if args.use_validation:
+            evaluate_one_epoch(val_loader, model, loss_fn, run, task, "val")
 
         save_model(model, args, run, epoch)
 

@@ -81,6 +81,8 @@ def load_enwik8(split: str = "train", cache_dir: str = None):
         return ds[95_000_000:]
     elif split == "all":
         return ds[:90_000_000], ds[90_000_000:95_000_000], ds[95_000_000:]
+    elif split == "all_wo_val":
+        return ds[:95_000_000], ds[95_000_000:]
     raise ValueError(f"Invalid split: {split}")
 
 
@@ -109,6 +111,8 @@ def load_enwik9(split: str = "train", cache_dir: str = None):
         return ds[950_000_000:]
     elif split == "all":
         return ds[:900_000_000], ds[900_000_000:950_000_000], ds[950_000_000:]
+    elif split == "all_wo_val":
+        return ds[:950_000_000], ds[950_000_000:]
     raise ValueError("Invalid split")
 
 

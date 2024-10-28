@@ -30,6 +30,7 @@ DEFAULT_ARGS = {
     "batch_size": 2,
     "gradient_accumulation_steps": 1,
     "criterion": "cross_entropy",
+    "use_validation": False,
     # SCHEDULER PARAMETERS
     "scheduler": True,
     "scheduler_lr_warmup_steps": int(1_000_000_000 / 4096) * 0.01,
@@ -46,7 +47,7 @@ DEFAULT_ARGS = {
     "mha_type": "vanilla",
     "d_model": 512,
     "num_heads": 8,
-    "dropout": 0.1,
+    "dropout": 0,
     "has_outproj": True,
     "act_fun": "relu",
     "apply_rotary_pos_enc": False,
@@ -57,4 +58,11 @@ DEFAULT_ARGS = {
     "structure": "6x4096",
     "pos_enc_type": "learnable",
     "device": "cuda",
+    #
+    # HOURGLASS PARAMETERS
+    "hourglass_downsampling_type": "avg",
+    "hourglass_upsampling_type": "linear",
+    "hourglass_attention_downsampling": True,
+    "hourglass_attention_upsampling": True,
+    "hourglass_upsampling_residual": True,
 }

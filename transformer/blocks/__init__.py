@@ -1,5 +1,4 @@
 """Package for transformer blocks."""
 
-from .block import Block
-from .tightening_block import TighteningBlock
-from .hourglass import HourglassBlock
+from .transformer_block import Block
+from .hourglass_block.hourglass import HourglassBlock

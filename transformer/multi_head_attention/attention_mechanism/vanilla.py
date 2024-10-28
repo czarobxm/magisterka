@@ -1,19 +1,24 @@
 from typing import Tuple
 import math
 import torch
-from torch import nn
+
+from transformer.multi_head_attention.attention_mechanism.base import (
+    BaseAttentionMechanism,
+)
 
 
-class VanillaAttention(nn.Module):
-    def __init__(self, num_heads: int, embed_dim: int) -> None:
-        super().__init__()
-        self.embed_dim = embed_dim
-        self.num_heads = num_heads
-        self.head_dim = embed_dim // num_heads
+class VanillaAttention(BaseAttentionMechanism):
+    """
+    Vanilla attention mechanism.
+    """
 
-        if self.head_dim * num_heads != self.embed_dim:
+    def __init__(self, num_heads: int, d_model: int) -> None:
+        super().__init__(d_model=d_model, num_heads=num_heads)
+        self.head_dim = d_model // num_heads
+
+        if self.head_dim * num_heads != self.d_model:
             raise ValueError(
-                f"embed_dim {embed_dim} not divisible by num_heads {num_heads}"
+                f"embed_dim {d_model} not divisible by num_heads {num_heads}"
             )
 
     def multihead_reshape(
@@ -31,6 +36,14 @@ class VanillaAttention(nn.Module):
         value = value.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)
 
         return query, key, value
+
+    def undo_multihead_reshape(self, attn_output: torch.Tensor) -> torch.Tensor:
+        """
+        Undo multi-head reshaping: Split heads from size [B, Nh, L, Dh] to size [B, L, D]
+        """
+        batch_size = attn_output.size(0)
+        output = attn_output.contiguous().view(batch_size, -1, self.d_model)
+        return output
 
     def scaled_dot_product_attention(
         self,
@@ -53,7 +66,14 @@ class VanillaAttention(nn.Module):
         attn_weight += attn_bias
         attn_weight = torch.softmax(attn_weight, dim=-1)
         output = attn_weight @ value
-        return output
+        return output.transpose(1, 2)
+
+    def inference(
+        self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor
+    ) -> torch.Tensor:
+        raise NotImplementedError(
+            "Inference is not supported for the vanilla attention mechanism."
+        )
 
     def forward(
         self,
@@ -83,7 +103,4 @@ class VanillaAttention(nn.Module):
         # Scaled dot product attention
         output = self.scaled_dot_product_attention(query, key, value, causal=causal)
 
-        # Undo multi-head reshaping: [B, Nh, L, Dh] -> [B, L, D]
-        return (
-            output.transpose(1, 2).contiguous().view(output.size(0), -1, self.embed_dim)
-        )
+        return output

@@ -1,6 +1,7 @@
 """
 Favor+ mechanism described in https://arxiv.org/pdf/2009.14794.pdf.
-This implementation is heavily based on the: https://github.com/lucidrains/performer-pytorch
+This implementation is heavily based on the: 
+https://github.com/lucidrains/performer-pytorch
 and https://github.com/nawnoes/pytorch-performer
 """
 
@@ -10,19 +11,15 @@ import torch
 from torch import nn
 
 from fast_transformers.causal_product import causal_dot_product
-from transformer.layers.multi_head_attention.attention_mechanism.performer.utils import (
+from transformer.multi_head_attention.attention_mechanism.base import (
+    BaseAttentionMechanism,
+)
+from transformer.multi_head_attention.attention_mechanism.performer.utils import (
     causal_denominator,
     causal_numerator,
     noncausal_denominator,
     noncausal_numerator,
 )
-
-
-def undo_multihead_reshape(
-    x: torch.Tensor, d_model: int, batch_size: int, tgt_len: int
-) -> torch.Tensor:
-    """[B, L, Nh, Dh] -> [B, L, D]"""
-    return x.contiguous().view(batch_size, tgt_len, d_model)
 
 
 def attention_causal_cuda(
@@ -140,21 +137,19 @@ def attention_noncausal(
     return attention_result
 
 
-class Performer(nn.Module):
+class Performer(BaseAttentionMechanism):
     def __init__(
         self,
         num_head,
-        embed_dim,
+        d_model,
         kernel_transformation,
         random_features_num,
         random_features_gen_method,
         eps: float = 1e-6,
         device: str = "cpu",
     ) -> None:
-        super().__init__()
-        self.embed_dim = embed_dim
-        self.num_heads = num_head
-        self.dim_head = embed_dim // num_head
+        super().__init__(d_model=d_model, num_heads=num_head)
+        self.dim_head = self.d_model // num_head
         self.kernel_transformation = kernel_transformation
 
         self.num_features = random_features_num
@@ -184,7 +179,13 @@ class Performer(nn.Module):
         )
         return query, key, value
 
-    def inference(self):
+    def undo_multihead_reshape(self, attn_output: torch.Tensor) -> torch.Tensor:
+        """[B, L, Nh, Dh] -> [B, L, D]"""
+        batch_size = attn_output.size(0)
+        tgt_len = attn_output.size(1)
+        return attn_output.contiguous().view(batch_size, tgt_len, -1)
+
+    def inference(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
         raise NotImplementedError("Inference not implemented")
 
     def forward(
@@ -215,9 +216,6 @@ class Performer(nn.Module):
         key = key.transpose(1, 2)  # [B, Nh, L, Dh] -> [B, L, Nh, Dh]
         value = value.transpose(1, 2)  # [B, Nh, L, Dh] -> [B, L, Nh, Dh]
 
-        batch_size = query.size(0)
-        seq_len = query.size(1)
-
         # Kernel Transformation
         query = self.kernel_transformation(
             query, True, self.projection_matrix
@@ -232,6 +230,7 @@ class Performer(nn.Module):
             out = attention_noncausal(query, key, value, self.device)
         elif not causal and inference:
             out = inference
+        else:
+            raise ValueError("Invalid attention mode")
 
-        out = undo_multihead_reshape(out, self.embed_dim, batch_size, seq_len)
         return out

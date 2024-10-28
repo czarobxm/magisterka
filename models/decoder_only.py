@@ -6,16 +6,16 @@ import torch
 from torch import nn
 
 from models.base import BaseModel
-from transformer.blocks.block import Block
-from transformer.blocks.hourglass import HourglassBlock
+from transformer.blocks.transformer_block import Block
+from transformer.blocks.hourglass_block import HourglassBlock
 from transformer.positional_encoding import PositionalEncoding
-from transformer.layers.multi_head_attention.attention_mechanism.attn_params import (
+from transformer.multi_head_attention.attention_mechanism.attn_params import (
     LinearAttnParams,
     VanillaParams,
     PerformerParams,
     CosformerParams,
 )
-from transformer.blocks.utils import ShiftRight
+from transformer.blocks.hourglass_block.utils import ShiftRight
 
 
 class DecoderOnlyTransformer(BaseModel):
@@ -40,6 +40,11 @@ class DecoderOnlyTransformer(BaseModel):
         post_norm: bool = False,
         pos_enc_type: str = "learnable",
         use_embedding: bool = True,
+        hourglass_downsampling_type: str = "avg",
+        hourglass_upsampling_type: str = "linear",
+        hourglass_attention_downsampling: bool = True,
+        hourglass_attention_upsampling: bool = True,
+        hourglass_upsampling_residual: bool = True,
         device: str = "cpu",
     ):
         super().__init__(
@@ -55,6 +60,11 @@ class DecoderOnlyTransformer(BaseModel):
             post_norm=post_norm,
             pos_enc_type=pos_enc_type,
             use_embedding=use_embedding,
+            hourglass_downsampling_type=hourglass_downsampling_type,
+            hourglass_upsampling_type=hourglass_upsampling_type,
+            hourglass_attention_downsampling=hourglass_attention_downsampling,
+            hourglass_attention_upsampling=hourglass_attention_upsampling,
+            hourglass_upsampling_residual=hourglass_upsampling_residual,
             device=device,
         )
 
@@ -93,6 +103,11 @@ class DecoderOnlyTransformer(BaseModel):
                 has_outproj=self.attn_has_outproj,
                 act_fun=self.act_fun,
                 post_norm=self.post_norm,
+                downsampling_type=self.hourglass_downsampling_type,
+                upsampling_type=self.hourglass_upsampling_type,
+                attention_downsampling=self.hourglass_attention_downsampling,
+                attention_upsampling=self.hourglass_attention_upsampling,
+                upsampling_residual=self.hourglass_upsampling_residual,
                 device=self.device,
             )
         # Classifier

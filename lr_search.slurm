@@ -37,6 +37,11 @@ poetry run python3 train_single_gpu.py \
  --epochs 1 \
  --init_lr $param2 \
  --tokenizer google/byt5-small \
- --post_norm false
+ --hourglass_downsampling_type "avg" \
+ --hourglass_upsampling_type "linear" \
+ --hourglass_attention_downsampling true \
+ --hourglass_attention_upsampling true \
+ --hourglass_upsampling_residual true \
+ --hourglass_post_norm false
 
 

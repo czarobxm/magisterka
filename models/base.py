@@ -5,7 +5,7 @@ from typing import Union
 import torch
 from torch import nn
 
-from transformer.layers.multi_head_attention.attention_mechanism.attn_params import (
+from transformer.multi_head_attention.attention_mechanism.attn_params import (
     LinearAttnParams,
     VanillaParams,
     PerformerParams,
@@ -52,6 +52,11 @@ class BaseModel(nn.Module):
         post_norm: bool,
         pos_enc_type: str,
         use_embedding: bool,
+        hourglass_downsampling_type: str,
+        hourglass_upsampling_type: str,
+        hourglass_attention_downsampling: bool,
+        hourglass_attention_upsampling: bool,
+        hourglass_upsampling_residual: bool,
         device: str,
     ):
         super().__init__()
@@ -73,6 +78,11 @@ class BaseModel(nn.Module):
             self.act_fun = None
         self.post_norm = post_norm
         self.use_embedding = use_embedding
+        self.hourglass_attention_downsampling = hourglass_attention_downsampling
+        self.hourglass_attention_upsampling = hourglass_attention_upsampling
+        self.hourglass_upsampling_residual = hourglass_upsampling_residual
+        self.hourglass_downsampling_type = hourglass_downsampling_type
+        self.hourglass_upsampling_type = hourglass_upsampling_type
         self.device = device
 
         self.n_layers, self.sizes = self.parse_structure()
@@ -103,6 +113,12 @@ class BaseModel(nn.Module):
             "pos_enc_type": self.pos_enc_type,
             "number_of_params": sum(p.numel() for p in self.parameters()),
             "device": self.device,
+            # Hourglass parameters
+            "downsampling_type": self.hourglass_downsampling_type,
+            "upsampling_type": self.hourglass_upsampling_type,
+            "attention_downsampling": self.hourglass_attention_downsampling,
+            "attention_upsampling": self.hourglass_attention_upsampling,
+            "upsampling_residual": self.hourglass_upsampling_residual,
             # MHA parameters
             "mha_type": self.method_params.method,
             "d_model": self.d_model,

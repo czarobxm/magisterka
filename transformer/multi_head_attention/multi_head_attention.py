@@ -7,14 +7,23 @@ from typing import Union
 
 import torch
 from torch import nn
+from rotary_embedding_torch import RotaryEmbedding
 
-from transformer.layers.multi_head_attention.attention_mechanism.attn_params import (
+from transformer.multi_head_attention.attention_mechanism import (
+    VanillaAttention,
+)
+from transformer.multi_head_attention.attention_mechanism import (
+    Performer,
+)
+from transformer.multi_head_attention.attention_mechanism import (
+    Cosformer,
+)
+from transformer.multi_head_attention.attention_mechanism.attn_params import (
     LinearAttnParams,
     VanillaParams,
     PerformerParams,
     CosformerParams,
 )
-from transformer.layers.multi_head_attention.attention_mechanism import AttentionMechanism
 
 
 class MultiHeadAttention(nn.Module):
@@ -58,6 +67,10 @@ class MultiHeadAttention(nn.Module):
         self.has_outproj = has_outproj
         self.apply_rotary_pos_enc = apply_rotary_pos_enc
         self.act_fun = act_fun
+        if self.apply_rotary_pos_enc:
+            self.rotary_pos_enc = RotaryEmbedding(
+                self.dim_head // 2,
+            )
         self.device = device
 
         # Linear transformations
@@ -67,13 +80,25 @@ class MultiHeadAttention(nn.Module):
         if self.has_outproj:
             self.w_o = nn.Linear(self.d_model, self.d_model)
 
-        self.attention_mechanism = AttentionMechanism(
-            d_model=self.d_model,
-            num_heads=self.num_heads,
-            method_params=self.method_params,
-            apply_rotary_pos_enc=self.apply_rotary_pos_enc,
-            device=self.device,
-        )
+        # Set attention mechanism
+        if self.method_params.method == "vanilla":
+            self.attention_mechanism = VanillaAttention(num_heads, d_model=self.d_model)
+        if self.method_params.method == "performer":
+            self.attention_mechanism = Performer(
+                self.num_heads,
+                self.d_model,
+                kernel_transformation=self.method_params.kernel_transformation,
+                random_features_num=self.method_params.random_features_num,
+                random_features_gen_method=self.method_params.random_features_gen,
+                device=self.device,
+            )
+        if self.method_params.method == "cosformer":
+            self.attention_mechanism = Cosformer(
+                d_model=self.d_model,
+                num_heads=self.num_heads,
+                eps=self.method_params.eps,
+                device=self.device,
+            )
 
         self.dropout = nn.Dropout(p=self.dropout)
 
@@ -120,9 +145,24 @@ class MultiHeadAttention(nn.Module):
             query = self.act_fun(query)
             key = self.act_fun(key)
 
+        # Reshape query, key and value to from [B, L, D] to [B, Nh, L, Dh]
+        query, key, value = self.attention_mechanism.multihead_reshape(
+            query=query, key=key, value=value
+        )
+
+        # Apply rotary position encoding
+        if self.apply_rotary_pos_enc:
+            query = self.rotary_pos_enc.rotate_queries_or_keys(query)
+            key = self.rotary_pos_enc.rotate_queries_or_keys(key)
+
         # Apply Multi-Head Attention mechanism
         attention_result = self.attention_mechanism(
             query, key, value, causal=causal, inference=inference
+        )
+
+        # Undo multi-head reshape from [B, Nh, L, Dh] to [B, L, D]
+        attention_result = self.attention_mechanism.undo_multihead_reshape(
+            attention_result
         )
 
         # Output projection with dropout

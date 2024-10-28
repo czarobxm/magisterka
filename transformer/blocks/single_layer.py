@@ -2,22 +2,22 @@
 Encoder module of the transformer model.
 """
 
-from typing import Union, Optional, List
+from typing import Union, Optional
 
 import torch
 from torch import nn
 
-from transformer.layers.multi_head_attention.attention_mechanism.attn_params import (
+from transformer.multi_head_attention.attention_mechanism.attn_params import (
     LinearAttnParams,
     VanillaParams,
     PerformerParams,
     CosformerParams,
 )
-from transformer.layers.multi_head_attention import MultiHeadAttention
-from transformer.layers import FeedForward
+from transformer.multi_head_attention import MultiHeadAttention
+from transformer.feed_forward import FeedForward
 
 
-class BlockLayer(nn.Module):
+class TransformerLayer(nn.Module):
     """Single block layer with multi-head attention and feed forward network."""
 
     def __init__(
@@ -67,7 +67,7 @@ class BlockLayer(nn.Module):
 
         self.ffn = FeedForward(
             d_model=self.d_model,
-            hidden=2 * self.d_model,
+            hidden=4 * self.d_model,
             drop_prob=dropout,
         )
 
@@ -129,87 +129,4 @@ class BlockLayer(nn.Module):
             x = self.norm2(x + self.dropout2(self.ffn(x)))
         else:
             x = x + self.dropout2(self.ffn(self.norm2(x)))
-        return x
-
-
-class Block(nn.Module):
-    """
-    Single block in transformer model. Stack of layers with multi-head attention
-    and feed forward network.
-    """
-
-    def __init__(
-        self,
-        n_layers: Union[int],
-        d_model: int,
-        num_heads: int,
-        method_params: Union[
-            LinearAttnParams,
-            VanillaParams,
-            PerformerParams,
-            CosformerParams,
-        ],
-        apply_rotary_pos_enc: bool = True,
-        dropout: float = 0.1,
-        has_outproj: bool = True,
-        act_fun: str = None,
-        post_norm: bool = False,
-        device: str = "cpu",
-    ) -> None:
-        """Init encoder - stack :param n_layers: the encoder layers on each other"""
-        super().__init__()
-        self.d_model = d_model
-        self.num_heads = num_heads
-        self.has_outproj = has_outproj
-        self.device = device
-
-        self.n_layers = self._validate_n_layers(n_layers)
-
-        self.layers = nn.ModuleList(
-            [
-                BlockLayer(
-                    d_model=self.d_model,
-                    num_heads=self.num_heads,
-                    method_params=method_params,
-                    apply_rotary_pos_enc=apply_rotary_pos_enc,
-                    dropout=dropout,
-                    has_outproj=self.has_outproj,
-                    act_fun=act_fun,
-                    post_norm=post_norm,
-                    device=self.device,
-                )
-                for _ in range(self.n_layers)
-            ]
-        )
-
-        if self.has_outproj:
-            self.out_proj = nn.Linear(self.d_model, self.d_model)
-
-        self.to(device)
-
-    def _validate_n_layers(self, n_layers: Union[int, List[int]]) -> int:
-        """Validate and return the number of layers."""
-        if isinstance(n_layers, int):
-            return n_layers
-        elif isinstance(n_layers, list) and len(n_layers) == 1:
-            return n_layers[0]
-        else:
-            raise ValueError(
-                "n_layers must be an integer or a list with a single integer"
-            )
-
-    def forward(
-        self,
-        x: torch.Tensor,
-        key_value: torch.Tensor = None,
-        causal: bool = True,
-        inference: bool = False,
-    ) -> torch.Tensor:
-        """Produces the output of the encoder block."""
-        for layer in self.layers:
-            x = layer(x=x, key_value=key_value, causal=causal, inference=inference)
-            key_value = None  # Set key_value to None after first layer
-
-        if self.has_outproj:
-            return self.out_proj(x)
         return x

@@ -22,24 +22,3 @@ def multihead_reshape(x: torch.Tensor, num_heads: int, dim_head: int) -> torch.T
     """
     batch_size, seq_len, _ = x.size()
     return x.contiguous().view(batch_size, seq_len, num_heads, dim_head).transpose(1, 2)
-
-
-def undo_multihead_reshape(x: torch.Tensor) -> torch.Tensor:
-    """
-    Undo the reshape operation for multi-head attention output.
-
-    Args:
-        x (torch.Tensor): Input tensor of shape [B, L, Nh, Dh]
-
-    Returns:
-        torch.Tensor: Reshaped tensor of shape [B, L, D]
-
-    Where:
-        B: Batch size
-        Nh: Number of heads
-        L: Sequence length
-        Dh: Dimension of each head
-        D: Model dimension (D = Nh * Dh)
-    """
-    batch_size, seq_len, num_heads, dim_head = x.size()
-    return x.contiguous().view(batch_size, seq_len, num_heads * dim_head)

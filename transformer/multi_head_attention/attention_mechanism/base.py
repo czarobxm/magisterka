@@ -73,6 +73,20 @@ class BaseAttentionMechanism(nn.Module):
             "multihead_reshape method must be implemented by subclasses"
         )
 
+    def undo_multihead_reshape(self, attn_output: torch.Tensor) -> torch.Tensor:
+        """
+        Undo the multi-head reshaping.
+
+        Args:
+            tensor (torch.Tensor): The tensor to undo the reshaping.
+
+        Raises:
+            NotImplementedError: This method must be implemented by subclasses.
+        """
+        raise NotImplementedError(
+            "undo_multihead_reshape method must be implemented by subclasses"
+        )
+
     def inference(
         self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor
     ) -> torch.Tensor:

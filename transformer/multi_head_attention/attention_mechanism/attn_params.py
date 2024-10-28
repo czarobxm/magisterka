@@ -1,10 +1,10 @@
 from typing import Callable, Dict, Any
 from dataclasses import dataclass, field
 
-from transformer.layers.multi_head_attention.attention_mechanism.performer.kernel_transformations import (
+from transformer.multi_head_attention.attention_mechanism.performer.kernel_transformations import (
     softmax_kernel_transformation,
 )
-from transformer.layers.multi_head_attention.attention_mechanism.performer.utils import (
+from transformer.multi_head_attention.attention_mechanism.performer.utils import (
     orthogonal_gaussian_random_feature,
 )
 

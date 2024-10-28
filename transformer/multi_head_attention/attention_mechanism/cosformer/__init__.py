@@ -4,24 +4,23 @@ Cosformer attention implementation based on the official implementation:
 https://github.com/OpenNLPLab/cosFormer/blob/main/cosformer.py
 """
 
-from typing import List, Tuple
+from typing import List, Optional
 
 import torch
 from torch import nn
 import numpy as np
 
-from transformer.layers.multi_head_attention.attention_mechanism.base import (
+from transformer.multi_head_attention.attention_mechanism.base import (
     BaseAttentionMechanism,
 )
-from transformer.layers.multi_head_attention.attention_mechanism.cosformer.attention_noncausal import (
+from transformer.multi_head_attention.attention_mechanism.cosformer.attention_noncausal import (
     attention_noncausal,
 )
-from transformer.layers.multi_head_attention.attention_mechanism.cosformer.attention_causal import (
+from transformer.multi_head_attention.attention_mechanism.cosformer.attention_causal import (
     attention_causal,
 )
-from transformer.layers.multi_head_attention.attention_mechanism.cosformer.multihead_reshape import (
+from transformer.multi_head_attention.attention_mechanism.cosformer.multihead_reshape import (
     multihead_reshape,
-    undo_multihead_reshape,
 )
 
 
@@ -112,6 +111,26 @@ class Cosformer(BaseAttentionMechanism):
             multihead_reshape(value, self.num_heads, self.dim_head),
         )
 
+    def undo_multihead_reshape(self, attn_output: torch.Tensor) -> torch.Tensor:
+        """
+        Undo the reshape operation for multi-head attention output.
+
+        Args:
+            x (torch.Tensor): Input tensor of shape [B, L, Nh, Dh]
+
+        Returns:
+            torch.Tensor: Reshaped tensor of shape [B, L, D]
+
+        Where:
+            B: Batch size
+            Nh: Number of heads
+            L: Sequence length
+            Dh: Dimension of each head
+            D: Model dimension (D = Nh * Dh)
+        """
+        batch_size, seq_len, num_heads, dim_head = attn_output.size()
+        return attn_output.contiguous().view(batch_size, seq_len, num_heads * dim_head)
+
     def feature_map(
         self,
         query: torch.Tensor,
@@ -161,4 +180,46 @@ class Cosformer(BaseAttentionMechanism):
         else:
             out = attention_noncausal(q_, k_, value, self.eps)
 
-        return undo_multihead_reshape(out)
+        return out
+
+    def left_product(
+        self,
+        query: torch.Tensor,
+        key: torch.Tensor = None,
+        value: torch.Tensor = None,
+        causal: bool = True,
+        start_pos: int = 1,
+    ):
+        """
+        Left-product Cosformer attention mechanism (of n^2 complexity) - https://arxiv.org/abs/2202.08791
+
+        Args:
+            query (torch.Tensor): Query tensor of shape [B, Nh, L, Dh]
+            key (torch.Tensor): Key tensor of shape [B, Nh, L, Dh]
+            value (torch.Tensor): Value tensor of shape [B, Nh, L, Dh]
+            causal (bool): Whether to use causal attention
+            inference (bool): Whether to use inference mode
+            start_pos (int): Starting position for the feature map
+
+        Returns:
+            torch.Tensor: Attention mechanism output of shape [B, L, D]
+        """
+        tgt_len, src_len = query.size(2), key.size(2)
+
+        q_, k_ = self.feature_map(query, key, tgt_len, src_len, start_pos)
+        attn_weight = q_ @ k_.transpose(-2, -1)
+
+        attn_bias = torch.zeros(tgt_len, src_len, dtype=query.dtype, device=query.device)
+        if causal:
+            causal_mask = torch.triu(
+                torch.ones(tgt_len, src_len, dtype=torch.bool, device=query.device),
+                diagonal=1,
+            )
+            attn_bias.masked_fill_(causal_mask, float("-inf"))
+            attn_weight = attn_weight.masked_fill(attn_bias == float("-inf"), 0)
+
+        denom = torch.clamp_min(attn_weight.sum(dim=-1, keepdim=True), self.eps)
+        attn_weight = attn_weight / denom
+
+        attn_output = attn_weight @ value
+        return attn_output.transpose(1, 2)
