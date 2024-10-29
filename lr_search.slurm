@@ -16,6 +16,9 @@ param5=$5 # batch_size
 param6=$6 # gradient_accumulation_steps
 param7=$7 # hourglass_downsampling_type
 param8=$8 # hourglass_upsampling_type
+param9=$9 # hourglass_attention_downsampling
+param10=${10} # hourglass_attention_upsampling
+param11=${11} # hourglass_upsampling_residual
 
 
 cosformer="cosformer"
@@ -42,8 +45,8 @@ poetry run python3 train_single_gpu.py \
  --tokenizer google/byt5-small \
  --hourglass_downsampling_type $param7 \
  --hourglass_upsampling_type $param8 \
- --hourglass_attention_downsampling false \
- --hourglass_attention_upsampling false \
- --hourglass_upsampling_residual false \
+ --hourglass_attention_downsampling $param9 \
+ --hourglass_attention_upsampling $param10 \
+ --hourglass_upsampling_residual $param11 \
 
 
