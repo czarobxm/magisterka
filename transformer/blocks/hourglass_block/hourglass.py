@@ -192,8 +192,9 @@ class HourglassBlock(nn.Module):
         ):
             x = self.shift_right_layers[i](x)
             x_downsampled = downsample(x)
+
             if self.attention_downsampling:
-                x_downsampled = self.attention_downsampling_layers[i](
+                x_downsampled = x_downsampled + self.attention_downsampling_layers[i](
                     x_downsampled, key=x, value=x
                 )
 
