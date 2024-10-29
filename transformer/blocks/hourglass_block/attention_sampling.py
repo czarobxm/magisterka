@@ -33,7 +33,7 @@ class AttentionDownsampling(nn.Module):
         attn_output = query + self.attention(
             self.norm1(query), self.norm1(key), self.norm1(value)
         )
-        ffn_output = attn_output + self.ffn(attn_output)
+        ffn_output = attn_output + self.ffn(self.norm2(attn_output))
 
         return ffn_output
 
@@ -65,5 +65,5 @@ class AttentionUpsampling(nn.Module):
         attn_output = query + self.attention(
             self.norm1(query), self.norm1(key), self.norm1(value)
         )
-        ffn_output = attn_output + self.norm2(self.ffn(attn_output))
+        ffn_output = attn_output + self.ffn(self.norm2(attn_output))
         return ffn_output
