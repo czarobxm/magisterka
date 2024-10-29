@@ -41,6 +41,12 @@ class LinearUpsampling(nn.Module):
         self.upsampling_factor = upsampling_factor
         self.linear = nn.Linear(d_model, d_model * upsampling_factor)
 
+        self._init_weights()
+
+    def _init_weights(self):
+        """Initialize weights of the model."""
+        nn.init.xavier_uniform_(self.linear.weight)
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward pass of the upsampling layer.

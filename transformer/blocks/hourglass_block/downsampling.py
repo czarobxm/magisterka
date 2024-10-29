@@ -19,7 +19,6 @@ class DownsamplingLayer(nn.Module):
             raise ValueError(f"Invalid downsampling type: {downsampling_type}")
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-
         return self.downsampling_layer(x)
 
 
@@ -54,6 +53,12 @@ class LinearPool(nn.Module):
         self.d_model = d_model
         self.downsampling_factor = downsampling_factor
         self.linear = nn.Linear(downsampling_factor * d_model, d_model)
+
+        self._init_weights()
+
+    def _init_weights(self):
+        """Initialize weights of the model."""
+        nn.init.xavier_uniform_(self.linear.weight)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """

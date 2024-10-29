@@ -20,6 +20,14 @@ class AttentionDownsampling(nn.Module):
         self.norm2 = nn.LayerNorm(self.d_model)
         self.ffn = FeedForward(d_model=d_model, hidden=4 * d_model, drop_prob=0.0)
 
+        self._init_weights()
+
+    def _init_weights(self):
+        """Initialize weights of the model."""
+        nn.init.xavier_uniform_(self.w_q.weight)
+        nn.init.xavier_uniform_(self.w_k.weight)
+        nn.init.xavier_uniform_(self.w_v.weight)
+
     def attention(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
         batch_size, seq_len, d_model = key.size()
         key = key.view(
@@ -75,6 +83,14 @@ class AttentionUpsampling(nn.Module):
         self.norm2 = nn.LayerNorm(self.d_model)
 
         self.ffn = FeedForward(d_model=d_model, hidden=4 * d_model, drop_prob=0.0)
+
+        self._init_weights()
+
+    def _init_weights(self):
+        """Initialize weights of the model."""
+        nn.init.xavier_uniform_(self.w_q.weight)
+        nn.init.xavier_uniform_(self.w_k.weight)
+        nn.init.xavier_uniform_(self.w_v.weight)
 
     def attention(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
         batch_size, seq_len, d_model = query.size()
