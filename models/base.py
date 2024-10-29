@@ -75,7 +75,7 @@ class BaseModel(nn.Module):
         elif act_fun == "relu":
             self.act_fun = nn.ReLU()
         elif act_fun == "none":
-            self.act_fun = None
+            self.act_fun = nn.Identity()
         self.post_norm = post_norm
         self.use_embedding = use_embedding
         self.hourglass_attention_downsampling = hourglass_attention_downsampling

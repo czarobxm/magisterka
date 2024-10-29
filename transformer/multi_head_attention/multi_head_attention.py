@@ -141,9 +141,8 @@ class MultiHeadAttention(nn.Module):
         value = self.w_v(value)
 
         # Apply activation function
-        if self.act_fun is not None:
-            query = self.act_fun(query)
-            key = self.act_fun(key)
+        query = self.act_fun(query)
+        key = self.act_fun(key)
 
         # Reshape query, key and value to from [B, L, D] to [B, Nh, L, Dh]
         query, key, value = self.attention_mechanism.multihead_reshape(
