@@ -63,10 +63,12 @@ class HourglassBlock(nn.Module):
 
         if self.attention_downsampling:
             self.attention_downsampling_layers = (
-                self._create_attention_downsampling_layers()
+                self._create_attention_downsampling_layers(act_fun)
             )
         if self.attention_upsampling:
-            self.attention_upsampling_layers = self._create_attention_upsampling_layers()
+            self.attention_upsampling_layers = self._create_attention_upsampling_layers(
+                act_fun
+            )
 
         self.downsampling_layers, self.upsampling_layers = self._create_sampling_layers()
         self.shift_right_layers = self._create_shift_right_layers()
@@ -92,25 +94,25 @@ class HourglassBlock(nn.Module):
             else:
                 assert sizes[i + 1] % sizes[i] == 0, "Adjacent sizes must be divisible"
 
-    def _create_attention_downsampling_layers(self) -> nn.ModuleList:
+    def _create_attention_downsampling_layers(self, act_fun) -> nn.ModuleList:
         """Create attention downsamplinglayers."""
         attention_downsampling_layers = nn.ModuleList()
         for i in range(len(self.sizes) - 1):
             if self.sizes[i] > self.sizes[i + 1]:
                 factor = self.sizes[i] // self.sizes[i + 1]
                 attention_downsampling_layers.append(
-                    AttentionDownsampling(self.d_model, factor)
+                    AttentionDownsampling(self.d_model, factor, act_fun)
                 )
         return attention_downsampling_layers
 
-    def _create_attention_upsampling_layers(self) -> nn.ModuleList:
+    def _create_attention_upsampling_layers(self, act_fun) -> nn.ModuleList:
         """Create attention upsampling layers."""
         attention_upsampling_layers = nn.ModuleList()
         for i in range(len(self.sizes) - 1):
             if self.sizes[i] <= self.sizes[i + 1]:
                 factor = self.sizes[i + 1] // self.sizes[i]
                 attention_upsampling_layers.append(
-                    AttentionUpsampling(self.d_model, factor)
+                    AttentionUpsampling(self.d_model, factor, act_fun)
                 )
         return attention_upsampling_layers
 
