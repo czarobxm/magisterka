@@ -18,9 +18,6 @@ class AttentionDownsampling(nn.Module):
 
         self.norm1 = nn.LayerNorm(self.d_model)
         self.norm2 = nn.LayerNorm(self.d_model)
-        self.avg_pool = nn.AvgPool1d(
-            kernel_size=downsampling_factor, stride=downsampling_factor
-        )
         self.ffn = FeedForward(d_model=d_model, hidden=4 * d_model, drop_prob=0.0)
 
     def attention(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
@@ -33,7 +30,14 @@ class AttentionDownsampling(nn.Module):
         )
         weights = torch.einsum("bsd,bsfd->bsf", query, key).flatten(1)
         attn_output = torch.einsum("bs,bsd->bsd", weights, value)
-        return self.avg_pool(attn_output.transpose(-1, -2)).transpose(-2, -1)
+        attn_output = attn_output.view(
+            batch_size,
+            seq_len // self.downsampling_factor,
+            self.downsampling_factor,
+            d_model,
+        )
+        attn_output = attn_output.sum(dim=2)
+        return attn_output
 
     def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor):
         # Linear projections
