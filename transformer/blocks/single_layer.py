@@ -32,7 +32,6 @@ class TransformerLayer(nn.Module):
         ],
         apply_rotary_pos_enc: bool = True,
         dropout: float = 0.1,
-        has_outproj: bool = True,
         act_fun: Optional[nn.Module] = None,
         post_norm: bool = False,
         device: str = "cpu",
@@ -57,7 +56,6 @@ class TransformerLayer(nn.Module):
             method_params=method_params,
             apply_rotary_pos_enc=apply_rotary_pos_enc,
             dropout=dropout,
-            has_outproj=has_outproj,
             act_fun=act_fun,
             device=device,
         )

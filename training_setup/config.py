@@ -26,9 +26,9 @@ DEFAULT_ARGS = {
     #
     # TRAINING PARAMETERS
     "init_lr": 0.00008,
-    "epochs": 6,
+    "epochs": 1,
     "batch_size": 2,
-    "gradient_accumulation_steps": 1,
+    "gradient_accumulation_steps": 8,
     "criterion": "cross_entropy",
     "use_validation": False,
     # SCHEDULER PARAMETERS
@@ -39,7 +39,7 @@ DEFAULT_ARGS = {
     #
     # DATASET PARAMETERS
     "task": "sequence_modelling",
-    "dataset": "enwik8",
+    "dataset": "enwik9",
     "tokenizer": "bert-base-uncased",
     "max_length": 4096,
     #
@@ -48,7 +48,6 @@ DEFAULT_ARGS = {
     "d_model": 512,
     "num_heads": 8,
     "dropout": 0,
-    "has_outproj": True,
     "act_fun": "relu",
     "apply_rotary_pos_enc": False,
     "post_norm": False,

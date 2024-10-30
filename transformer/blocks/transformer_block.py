@@ -36,7 +36,6 @@ class Block(nn.Module):
         ],
         apply_rotary_pos_enc: bool = True,
         dropout: float = 0.1,
-        has_outproj: bool = True,
         act_fun: str = None,
         post_norm: bool = False,
         device: str = "cpu",
@@ -45,7 +44,6 @@ class Block(nn.Module):
         super().__init__()
         self.d_model = d_model
         self.num_heads = num_heads
-        self.has_outproj = has_outproj
         self.device = device
 
         self.n_layers = self._validate_n_layers(n_layers)
@@ -58,7 +56,6 @@ class Block(nn.Module):
                     method_params=method_params,
                     apply_rotary_pos_enc=apply_rotary_pos_enc,
                     dropout=dropout,
-                    has_outproj=self.has_outproj,
                     act_fun=act_fun,
                     post_norm=post_norm,
                     device=self.device,
@@ -66,9 +63,6 @@ class Block(nn.Module):
                 for _ in range(self.n_layers)
             ]
         )
-
-        if self.has_outproj:
-            self.out_proj = nn.Linear(self.d_model, self.d_model)
 
         self.to(device)
 
@@ -94,7 +88,4 @@ class Block(nn.Module):
         for layer in self.layers:
             x = layer(x=x, key_value=key_value, causal=causal, inference=inference)
             key_value = None  # Set key_value to None after first layer
-
-        if self.has_outproj:
-            return self.out_proj(x)
         return x

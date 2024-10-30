@@ -25,7 +25,6 @@ class BaseModel(nn.Module):
     :param apply_rotary_pos_enc: flag determining whether to use rotary position encoding
     :param dropout: dropout rate
     :param max_length: maximum length of the sequence
-    :param attn_has_outproj: flag determining whether to use output projection
     :param act_fun: activation function
     :param norm_before: flag determining whether to use PostNorm or PreNorm
     :param pos_enc_type: type of positional encoding
@@ -47,7 +46,6 @@ class BaseModel(nn.Module):
         ],
         apply_rotary_pos_enc: bool,
         dropout: float,
-        attn_has_outproj: bool,
         act_fun: str,
         post_norm: bool,
         pos_enc_type: str,
@@ -67,7 +65,6 @@ class BaseModel(nn.Module):
         self.method_params = method_params
         self.apply_rotary_pos_enc = apply_rotary_pos_enc
         self.dropout = dropout
-        self.attn_has_outproj = attn_has_outproj
         self.pos_enc_type = pos_enc_type
         self.act_fun_name = act_fun
         if act_fun == "gelu":
@@ -124,7 +121,6 @@ class BaseModel(nn.Module):
             "d_model": self.d_model,
             "num_heads": self.num_heads,
             "dropout": self.dropout,
-            "attn_has_outproj": self.attn_has_outproj,
             "act_fun": self.act_fun_name,
             "apply_rotary_pos_enc": self.apply_rotary_pos_enc,
             "post_norm": self.post_norm,

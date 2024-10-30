@@ -24,7 +24,6 @@ def initialize_model(
         "method_params": method_params,
         "apply_rotary_pos_enc": args.apply_rotary_pos_enc,
         "dropout": args.dropout,
-        "attn_has_outproj": args.has_outproj,
         "act_fun": args.act_fun,
         "post_norm": args.post_norm,
         "hourglass_downsampling_type": args.hourglass_downsampling_type,

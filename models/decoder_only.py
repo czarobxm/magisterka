@@ -35,7 +35,6 @@ class DecoderOnlyTransformer(BaseModel):
         ] = CosformerParams(),
         apply_rotary_pos_enc: bool = True,
         dropout: float = 0.1,
-        attn_has_outproj: bool = True,
         act_fun: str = None,
         post_norm: bool = False,
         pos_enc_type: str = "learnable",
@@ -55,7 +54,6 @@ class DecoderOnlyTransformer(BaseModel):
             method_params=method_params,
             apply_rotary_pos_enc=apply_rotary_pos_enc,
             dropout=dropout,
-            attn_has_outproj=attn_has_outproj,
             act_fun=act_fun,
             post_norm=post_norm,
             pos_enc_type=pos_enc_type,
@@ -77,7 +75,7 @@ class DecoderOnlyTransformer(BaseModel):
         )
         # Shift right
         self.shift_right = ShiftRight(shift=1)
-        # Encoder
+        # Decoder
         if len(self.n_layers) == len(self.sizes) == 1:
             self.decoder_block = Block(
                 n_layers=self.n_layers,
@@ -86,7 +84,6 @@ class DecoderOnlyTransformer(BaseModel):
                 method_params=self.method_params,
                 apply_rotary_pos_enc=self.apply_rotary_pos_enc,
                 dropout=self.dropout,
-                has_outproj=self.attn_has_outproj,
                 act_fun=self.act_fun,
                 post_norm=self.post_norm,
                 device=self.device,
@@ -100,7 +97,6 @@ class DecoderOnlyTransformer(BaseModel):
                 method_params=self.method_params,
                 apply_rotary_pos_enc=self.apply_rotary_pos_enc,
                 dropout=self.dropout,
-                has_outproj=self.attn_has_outproj,
                 act_fun=self.act_fun,
                 post_norm=self.post_norm,
                 downsampling_type=self.hourglass_downsampling_type,
@@ -125,7 +121,7 @@ class DecoderOnlyTransformer(BaseModel):
             x = self.embedder(x)
         # Positional Encoding
         x = self.pos_enc(x)
-        # Encoder
+        # Decoder
         x = self.decoder_block(x, causal=True, inference=inference)
         # Linear
         x = self.classifier(x)

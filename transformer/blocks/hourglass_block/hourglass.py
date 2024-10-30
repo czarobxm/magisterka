@@ -39,7 +39,6 @@ class HourglassBlock(nn.Module):
         ],
         apply_rotary_pos_enc: bool = True,
         dropout: float = 0.1,
-        has_outproj: bool = True,
         act_fun: nn.Module = None,
         post_norm: bool = False,
         downsampling_type: str = "avg",
@@ -80,7 +79,6 @@ class HourglassBlock(nn.Module):
             dropout,
             act_fun,
             post_norm,
-            has_outproj,
         )
 
         self.to(device)
@@ -154,7 +152,6 @@ class HourglassBlock(nn.Module):
         dropout: float,
         act_fun: Optional[nn.Module],
         post_norm: bool,
-        has_outproj: bool,
     ) -> nn.ModuleList:
         """Create decoder chunks."""
         return nn.ModuleList(
@@ -166,7 +163,6 @@ class HourglassBlock(nn.Module):
                     method_params=method_params,
                     apply_rotary_pos_enc=apply_rotary_pos_enc,
                     dropout=dropout,
-                    has_outproj=has_outproj,
                     act_fun=act_fun,
                     post_norm=post_norm,
                     device=self.device,
@@ -219,7 +215,7 @@ class HourglassBlock(nn.Module):
                 x_upsampled = residual + x_upsampled
 
             if self.attention_upsampling:
-                x_upsampled = x_upsampled + self.attention_upsampling_layers[i](
+                x_upsampled = self.attention_upsampling_layers[i](
                     x_upsampled, key=x, value=x
                 )
 
