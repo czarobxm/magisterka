@@ -53,4 +53,4 @@ poetry run python3 train_single_gpu.py \
  --hourglass_upsampling_residual $param11 \
  --hourglass_sampling_post_norm $parma12 \
  --hourglass_sampling_use_linear $param13 \
- --hourglass_sampling_use_feedforward $param14 \
+ --hourglass_sampling_use_feedforward $param14
