@@ -31,6 +31,8 @@ def initialize_model(
         "hourglass_attention_downsampling": args.hourglass_attention_downsampling,
         "hourglass_attention_upsampling": args.hourglass_attention_upsampling,
         "hourglass_upsampling_residual": args.hourglass_upsampling_residual,
+        "hourglass_sampling_post_norm": args.hourglass_sampling_post_norm,
+        "hourglass_sampling_use_linear": args.hourglass_sampling_use_linear,
         "device": args.device,
     }
 
