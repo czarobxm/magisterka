@@ -47,6 +47,7 @@ class HourglassBlock(nn.Module):
         upsampling_residual: bool = True,
         sampling_post_norm: bool = True,
         sampling_use_linear: bool = True,
+        sampling_use_feedforward: bool = True,
         device: str = "cpu",
     ) -> None:
         super().__init__()
@@ -59,6 +60,7 @@ class HourglassBlock(nn.Module):
         self.upsampling_residual = upsampling_residual
         self.sampling_post_norm = sampling_post_norm
         self.sampling_use_linear = sampling_use_linear
+        self.sampling_use_feedforward = sampling_use_feedforward
         self.device = device
 
         self._validate_inputs(n_layers, sizes)
@@ -109,6 +111,7 @@ class HourglassBlock(nn.Module):
                         act_fun=act_fun,
                         post_norm=self.sampling_post_norm,
                         use_linear=self.sampling_use_linear,
+                        use_feedforward=self.sampling_use_feedforward,
                     )
                 )
         return attention_downsampling_layers
@@ -127,6 +130,7 @@ class HourglassBlock(nn.Module):
                         act_fun=act_fun,
                         post_norm=self.sampling_post_norm,
                         use_linear=self.sampling_use_linear,
+                        use_feedforward=self.sampling_use_feedforward,
                     )
                 )
         return attention_upsampling_layers
@@ -143,7 +147,6 @@ class HourglassBlock(nn.Module):
                 )
             else:
                 factor = self.sizes[i + 1] // self.sizes[i]
-                print("asd:", self.upsampling_type)
                 upsampling_layers.append(
                     UpsamplingLayer(self.d_model, factor, self.upsampling_type)
                 )

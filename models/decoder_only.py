@@ -46,6 +46,7 @@ class DecoderOnlyTransformer(BaseModel):
         hourglass_upsampling_residual: bool = True,
         hourglass_sampling_post_norm: bool = True,
         hourglass_sampling_use_linear: bool = True,
+        hourglass_sampling_use_feedforward: bool = True,
         device: str = "cpu",
     ):
         super().__init__(
@@ -70,6 +71,7 @@ class DecoderOnlyTransformer(BaseModel):
 
         self.hourglass_sampling_post_norm = hourglass_sampling_post_norm
         self.hourglass_sampling_use_linear = hourglass_sampling_use_linear
+        self.hourglass_sampling_use_feedforward = hourglass_sampling_use_feedforward
 
         # Embedders
         self.embedder = nn.Embedding(self.vocab_size, self.d_model)
@@ -111,6 +113,7 @@ class DecoderOnlyTransformer(BaseModel):
                 upsampling_residual=self.hourglass_upsampling_residual,
                 sampling_post_norm=self.hourglass_sampling_post_norm,
                 sampling_use_linear=self.hourglass_sampling_use_linear,
+                sampling_use_feedforward=self.hourglass_sampling_use_feedforward,
                 device=self.device,
             )
         # Classifier

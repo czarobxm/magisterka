@@ -33,6 +33,7 @@ def initialize_model(
         "hourglass_upsampling_residual": args.hourglass_upsampling_residual,
         "hourglass_sampling_post_norm": args.hourglass_sampling_post_norm,
         "hourglass_sampling_use_linear": args.hourglass_sampling_use_linear,
+        "hourglass_sampling_use_feedforward": args.hourglass_sampling_use_feedforward,
         "device": args.device,
     }
 

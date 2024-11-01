@@ -13,6 +13,7 @@ class AttentionSampling(nn.Module):
         act_fun: nn.Module,
         use_linear: bool,
         post_norm: bool,
+        use_feedforward: bool,
     ) -> None:
         super().__init__()
         self.factor = factor
@@ -20,6 +21,7 @@ class AttentionSampling(nn.Module):
         self.d_model = d_model
         self.use_linear = use_linear
         self.post_norm = post_norm
+        self.use_feed_forward = use_feedforward
 
         self.act_fun = act_fun
         if self.sampling_type == "downsampling":
@@ -98,9 +100,11 @@ class AttentionSampling(nn.Module):
             )
 
         # Feedforward
-        if self.post_norm:
-            output = self.norm2(output + self.ffn(output))
-        else:
-            output = output + self.ffn(self.norm2(output))
+        if self.use_feed_forward:
+            print("ASd")
+            if self.post_norm:
+                output = self.norm2(output + self.ffn(output))
+            else:
+                output = output + self.ffn(self.norm2(output))
 
         return output

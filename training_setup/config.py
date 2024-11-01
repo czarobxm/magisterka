@@ -66,4 +66,5 @@ DEFAULT_ARGS = {
     "hourglass_upsampling_residual": True,
     "hourglass_sampling_post_norm": True,
     "hourglass_sampling_use_linear": True,
+    "hourglass_sampling_use_feedforward": True,
 }

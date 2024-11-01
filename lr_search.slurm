@@ -19,6 +19,9 @@ param8=$8 # hourglass_upsampling_type
 param9=$9 # hourglass_attention_downsampling
 param10=${10} # hourglass_attention_upsampling
 param11=${11} # hourglass_upsampling_residual
+param12=${12} # hourglass_sampling_post_norm
+param13=${13} # hourglass_sampling_use_linear
+param14=${14} # hourglass_sampling_use_feedforward
 
 
 cosformer="cosformer"
@@ -48,5 +51,6 @@ poetry run python3 train_single_gpu.py \
  --hourglass_attention_downsampling $param9 \
  --hourglass_attention_upsampling $param10 \
  --hourglass_upsampling_residual $param11 \
- --hourglass_sampling_post_norm true \
- --hourglass_sampling_use_linear true
+ --hourglass_sampling_post_norm $parma12 \
+ --hourglass_sampling_use_linear $param13 \
+ --hourglass_sampling_use_feedforward $param14 \
