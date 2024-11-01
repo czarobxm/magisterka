@@ -66,12 +66,11 @@ class DecoderOnlyTransformer(BaseModel):
             hourglass_attention_downsampling=hourglass_attention_downsampling,
             hourglass_attention_upsampling=hourglass_attention_upsampling,
             hourglass_upsampling_residual=hourglass_upsampling_residual,
+            hourglass_sampling_post_norm=hourglass_sampling_post_norm,
+            hourglass_sampling_use_linear=hourglass_sampling_use_linear,
+            hourglass_sampling_use_feedforward=hourglass_sampling_use_feedforward,
             device=device,
         )
-
-        self.hourglass_sampling_post_norm = hourglass_sampling_post_norm
-        self.hourglass_sampling_use_linear = hourglass_sampling_use_linear
-        self.hourglass_sampling_use_feedforward = hourglass_sampling_use_feedforward
 
         # Embedders
         self.embedder = nn.Embedding(self.vocab_size, self.d_model)

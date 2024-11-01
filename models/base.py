@@ -55,6 +55,9 @@ class BaseModel(nn.Module):
         hourglass_attention_downsampling: bool,
         hourglass_attention_upsampling: bool,
         hourglass_upsampling_residual: bool,
+        hourglass_sampling_post_norm: bool,
+        hourglass_sampling_use_linear: bool,
+        hourglass_sampling_use_feedforward: bool,
         device: str,
     ):
         super().__init__()
@@ -80,6 +83,10 @@ class BaseModel(nn.Module):
         self.hourglass_upsampling_residual = hourglass_upsampling_residual
         self.hourglass_downsampling_type = hourglass_downsampling_type
         self.hourglass_upsampling_type = hourglass_upsampling_type
+        self.hourglass_sampling_post_norm = hourglass_sampling_post_norm
+        self.hourglass_sampling_use_linear = hourglass_sampling_use_linear
+        self.hourglass_sampling_use_feedforward = hourglass_sampling_use_feedforward
+
         self.device = device
 
         self.n_layers, self.sizes = self.parse_structure()
@@ -116,6 +123,8 @@ class BaseModel(nn.Module):
             "attention_downsampling": self.hourglass_attention_downsampling,
             "attention_upsampling": self.hourglass_attention_upsampling,
             "upsampling_residual": self.hourglass_upsampling_residual,
+            "sampling_post_norm": self.hourglass_sampling_post_norm,
+            "sampling_use_linear": self.hourglass_sampling_use_linear,
             # MHA parameters
             "mha_type": self.method_params.method,
             "d_model": self.d_model,
