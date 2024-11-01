@@ -125,6 +125,7 @@ class BaseModel(nn.Module):
             "upsampling_residual": self.hourglass_upsampling_residual,
             "sampling_post_norm": self.hourglass_sampling_post_norm,
             "sampling_use_linear": self.hourglass_sampling_use_linear,
+            "sampling_use_feedforward": self.hourglass_sampling_use_feedforward,
             # MHA parameters
             "mha_type": self.method_params.method,
             "d_model": self.d_model,

@@ -101,7 +101,6 @@ class AttentionSampling(nn.Module):
 
         # Feedforward
         if self.use_feed_forward:
-            print("ASd")
             if self.post_norm:
                 output = self.norm2(output + self.ffn(output))
             else:
