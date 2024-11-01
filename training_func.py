@@ -1,5 +1,4 @@
 from typing import Tuple
-import time
 from argparse import Namespace
 from pathlib import Path
 
@@ -16,16 +15,12 @@ def log_batch_neptune(
     loss: float,
     correct: int,
     total: int,
-    forward_pass_time: float,
-    grad_time: float,
     n_iter: int,
     lr: float,
 ) -> None:
     metrics = {
         f"{stage}_loss": loss,
         f"{stage}_batch_accuracy": correct / total,
-        "forward_pass_time": forward_pass_time,
-        "grad_time": grad_time,
         "n_iter": n_iter,
         "lr": lr,
     }
@@ -55,26 +50,18 @@ def train_one_batch(
     update_weights: bool,
     task: str,
 ) -> Tuple[float, int, int, float, float]:
-
     inputs, targets = prepare_inputs_and_targets(data, task, model.device)
-
-    start_fwd = time.time()
     outputs = model(inputs).view(targets.shape[0], -1)
-    end_fwd = time.time()
-
     loss = loss_fn(outputs, targets)
-
-    start_grad = time.time()
     loss.backward()
     if update_weights:
         optimizer.step()
         optimizer.zero_grad()
-    end_grad = time.time()
 
     correct = (outputs.argmax(-1) == targets).sum().item()
     total = outputs.shape[0]
 
-    return loss.item(), correct, total, end_fwd - start_fwd, end_grad - start_grad
+    return loss.item(), correct, total
 
 
 def train_one_epoch(
@@ -101,7 +88,7 @@ def train_one_epoch(
             update_weights = False
             accumulated_steps += 1
 
-        loss, cor, tot, forward_pass_time, grad_time = train_one_batch(
+        loss, cor, tot = train_one_batch(
             inputs, model, optimizer, loss_fn, update_weights, task
         )
         if scheduler is not None:
@@ -117,8 +104,6 @@ def train_one_epoch(
             loss=loss,
             correct=cor,
             total=tot,
-            forward_pass_time=forward_pass_time,
-            grad_time=grad_time,
             n_iter=n_iter,
             lr=lr,
         )

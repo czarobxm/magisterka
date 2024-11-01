@@ -64,4 +64,6 @@ DEFAULT_ARGS = {
     "hourglass_attention_downsampling": True,
     "hourglass_attention_upsampling": True,
     "hourglass_upsampling_residual": True,
+    "hourglass_sampling_post_norm": True,
+    "hourglass_sampling_use_linear": True,
 }

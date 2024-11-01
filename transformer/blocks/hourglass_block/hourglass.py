@@ -14,8 +14,7 @@ from transformer.blocks.hourglass_block.utils import ShiftRight
 from transformer.blocks.hourglass_block.downsampling import DownsamplingLayer
 from transformer.blocks.hourglass_block.upsampling import UpsamplingLayer
 from transformer.blocks.hourglass_block.attention_sampling import (
-    AttentionDownsampling,
-    AttentionUpsampling,
+    AttentionSampling,
 )
 
 
@@ -46,6 +45,8 @@ class HourglassBlock(nn.Module):
         attention_downsampling: bool = True,
         attention_upsampling: bool = True,
         upsampling_residual: bool = True,
+        sampling_post_norm: bool = True,
+        sampling_use_linear: bool = True,
         device: str = "cpu",
     ) -> None:
         super().__init__()
@@ -56,6 +57,8 @@ class HourglassBlock(nn.Module):
         self.attention_downsampling = attention_downsampling
         self.attention_upsampling = attention_upsampling
         self.upsampling_residual = upsampling_residual
+        self.sampling_post_norm = sampling_post_norm
+        self.sampling_use_linear = sampling_use_linear
         self.device = device
 
         self._validate_inputs(n_layers, sizes)
@@ -99,7 +102,14 @@ class HourglassBlock(nn.Module):
             if self.sizes[i] > self.sizes[i + 1]:
                 factor = self.sizes[i] // self.sizes[i + 1]
                 attention_downsampling_layers.append(
-                    AttentionDownsampling(self.d_model, factor, act_fun)
+                    AttentionSampling(
+                        self.d_model,
+                        factor,
+                        sampling_type="downsampling",
+                        act_fun=act_fun,
+                        post_norm=self.sampling_post_norm,
+                        use_linear=self.sampling_use_linear,
+                    )
                 )
         return attention_downsampling_layers
 
@@ -110,7 +120,14 @@ class HourglassBlock(nn.Module):
             if self.sizes[i] <= self.sizes[i + 1]:
                 factor = self.sizes[i + 1] // self.sizes[i]
                 attention_upsampling_layers.append(
-                    AttentionUpsampling(self.d_model, factor, act_fun)
+                    AttentionSampling(
+                        self.d_model,
+                        factor,
+                        sampling_type="upsampling",
+                        act_fun=act_fun,
+                        post_norm=self.sampling_post_norm,
+                        use_linear=self.sampling_use_linear,
+                    )
                 )
         return attention_upsampling_layers
 
