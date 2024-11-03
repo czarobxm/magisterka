@@ -54,7 +54,6 @@ class MultiHeadAttention(nn.Module):
         ],
         apply_rotary_pos_enc: bool = True,
         dropout: float = 0.1,
-        has_outproj: bool = True,
         act_fun: nn.Module = None,
         device: str = "cpu",
     ) -> None:
@@ -64,7 +63,6 @@ class MultiHeadAttention(nn.Module):
         self.dim_head = self.d_model // self.num_heads
         self.method_params = method_params
         self.dropout = dropout
-        self.has_outproj = has_outproj
         self.apply_rotary_pos_enc = apply_rotary_pos_enc
         self.act_fun = act_fun
         if self.apply_rotary_pos_enc:
@@ -77,8 +75,6 @@ class MultiHeadAttention(nn.Module):
         self.w_q = nn.Linear(self.d_model, self.d_model)
         self.w_k = nn.Linear(self.d_model, self.d_model)
         self.w_v = nn.Linear(self.d_model, self.d_model)
-        if self.has_outproj:
-            self.w_o = nn.Linear(self.d_model, self.d_model)
 
         # Set attention mechanism
         if self.method_params.method == "vanilla":
@@ -110,8 +106,6 @@ class MultiHeadAttention(nn.Module):
         nn.init.xavier_uniform_(self.w_q.weight)
         nn.init.xavier_uniform_(self.w_k.weight)
         nn.init.xavier_uniform_(self.w_v.weight)
-        if self.has_outproj:
-            nn.init.xavier_uniform_(self.w_o.weight)
 
     def forward(
         self,
@@ -163,9 +157,5 @@ class MultiHeadAttention(nn.Module):
         attention_result = self.attention_mechanism.undo_multihead_reshape(
             attention_result
         )
-
-        # Output projection with dropout
-        if self.has_outproj:
-            attention_result = self.dropout(self.w_o(attention_result))
 
         return attention_result

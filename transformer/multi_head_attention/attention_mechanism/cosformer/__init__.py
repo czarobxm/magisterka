@@ -148,79 +148,41 @@ class Cosformer(BaseAttentionMechanism):
         k_ = query_key_feature_map(key, weight_index, src_len, m)  # [B * Nh, S, 2 * Dh]
         return q_, k_
 
-    # def forward(
-    #     self,
-    #     query: torch.Tensor,
-    #     key: torch.Tensor,
-    #     value: torch.Tensor,
-    #     causal: bool = True,
-    #     inference: bool = False,
-    #     start_pos: int = 1,
-    # ) -> torch.Tensor:
-    #     """
-    #     Cosformer attention mechanism - https://arxiv.org/abs/2202.08791
+    def forward(
+        self,
+        query: torch.Tensor,
+        key: torch.Tensor,
+        value: torch.Tensor,
+        causal: bool = True,
+        inference: bool = False,
+        start_pos: int = 1,
+    ) -> torch.Tensor:
+        """
+        Cosformer attention mechanism - https://arxiv.org/abs/2202.08791
 
-    #     Args:
-    #         query (torch.Tensor): Query tensor of shape [B, Nh, L, Dh]
-    #         key (torch.Tensor): Key tensor of shape [B, Nh, L, Dh]
-    #         value (torch.Tensor): Value tensor of shape [B, Nh, L, Dh]
-    #         causal (bool): Whether to use causal attention
-    #         inference (bool): Whether to use inference mode
-    #         start_pos (int): Starting position for the feature map
+        Args:
+            query (torch.Tensor): Query tensor of shape [B, Nh, L, Dh]
+            key (torch.Tensor): Key tensor of shape [B, Nh, L, Dh]
+            value (torch.Tensor): Value tensor of shape [B, Nh, L, Dh]
+            causal (bool): Whether to use causal attention
+            inference (bool): Whether to use inference mode
+            start_pos (int): Starting position for the feature map
 
-    #     Returns:
-    #         torch.Tensor: Attention mechanism output of shape [B, L, D]
-    #     """
-    #     tgt_len, src_len = query.size(2), key.size(2)
-    #     q_, k_ = self.feature_map(query, key, tgt_len, src_len, start_pos)
+        Returns:
+            torch.Tensor: Attention mechanism output of shape [B, L, D]
+        """
+        tgt_len, src_len = query.size(2), key.size(2)
+        q_, k_ = self.feature_map(query, key, tgt_len, src_len, start_pos)
 
-    #     if inference:
-    #         raise NotImplementedError("Inference is not supported for the cosformer.")
+        if inference:
+            raise NotImplementedError("Inference is not supported for the cosformer.")
 
-    #     if causal:
-    #         out = attention_causal(q_, k_, value, self.eps, self.kv, self.k_, self.device)
-    #     else:
-    #         out = attention_noncausal(q_, k_, value, self.eps)
+        if causal:
+            out = attention_causal(q_, k_, value, self.eps, self.kv, self.k_, self.device)
+        else:
+            out = attention_noncausal(q_, k_, value, self.eps)
 
-    #     return out
-
-    def forward(self, query, key, value, causal=True, inference=False, start_pos=1):
-        Q = F.relu(query)
-        K = F.relu(key)
-
-        # apply mask
-        # Q = Q.masked_fill(~(mask.to(bool)[:, None, :, None]), 0)
-        # K = K.masked_fill(~(mask.to(bool)[:, None, :, None]), 0)
-
-        seq_len = Q.size(2)
-        idx = torch.arange(1, seq_len + 1, device=self.device)
-
-        # transform query and key into expanded form
-        sin_tr = torch.sin((math.pi / 2) * (idx / seq_len))
-        cos_tr = torch.cos((math.pi / 2) * (idx / seq_len))
-        q_sin = torch.mul(sin_tr.unsqueeze(-1), Q)
-        q_cos = torch.mul(cos_tr.unsqueeze(-1), Q)
-
-        k_sin = torch.mul(sin_tr, K.transpose(-2, -1))
-        k_cos = torch.mul(cos_tr, K.transpose(-2, -1))
-
-        # build out d x d intermediate matrices
-        attn_inter_sin = torch.matmul(k_sin, value)
-        attn_inter_cos = torch.matmul(k_cos, value)
-
-        attn_weights_sin = torch.matmul(q_sin, attn_inter_sin)
-        attn_weights_cos = torch.matmul(q_cos, attn_inter_cos)
-
-        # build out normalization
-        norm_sin = k_sin.sum(-1).unsqueeze(-1)
-        norm_cos = k_cos.sum(-1).unsqueeze(-1)
-
-        norm = torch.matmul(q_sin, norm_sin) + torch.matmul(q_cos, norm_cos)
-
-        # final product for attn scores
-        attn = (attn_weights_sin + attn_weights_cos) / norm
-
-        return attn
+        return out
 
     def left_product(
         self,
