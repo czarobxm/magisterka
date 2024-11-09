@@ -25,7 +25,7 @@ hourglass_sampling_use_feedforward=${14} # hourglass_sampling_use_feedforward
 
 
 cosformer="cosformer"
-if [ "$param1" == "$cosformer" ]; then
+if [ "$mha_type" == "$cosformer" ]; then
     act_fun="relu"
 else
     act_fun="none"
