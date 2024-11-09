@@ -1,7 +1,10 @@
-import os
+# import os
 
-NEPTUNE_PROJECT = os.environ.get("NEPTUNE_PROJECT", "default_project")
-NEPTUNE_API_TOKEN = os.environ.get("NEPTUNE_API_TOKEN", "default_token")
+# NEPTUNE_PROJECT = os.environ.get("NEPTUNE_PROJECT", "default_project")
+# NEPTUNE_API_TOKEN = os.environ.get("NEPTUNE_API_TOKEN", "default_token")
+
+NEPTUNE_PROJECT = "magisterka/linear-hourglass-lr-search"
+NEPTUNE_API_TOKEN = "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5OTEwMzFmMi1lMzc3LTQyNDYtODUxOC1lMjY2MzQ0OTY4NGYifQ=="
 
 SPECIAL_TOKENS_DICT = {
     "eos_token": "[EOS]",
