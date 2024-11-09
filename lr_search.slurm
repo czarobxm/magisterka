@@ -8,20 +8,20 @@
 #SBATCH --output=output/lr_search_%j.out
 
 
-param1=$1 # mha type
-param2=$2 # lr
-param3=$3 # structure
-param4=$4 # max_length
-param5=$5 # batch_size
-param6=$6 # gradient_accumulation_steps
-param7=$7 # hourglass_downsampling_type
-param8=$8 # hourglass_upsampling_type
-param9=$9 # hourglass_attention_downsampling
-param10=${10} # hourglass_attention_upsampling
-param11=${11} # hourglass_upsampling_residual
-param12=${12} # hourglass_sampling_post_norm
-param13=${13} # hourglass_sampling_use_linear
-param14=${14} # hourglass_sampling_use_feedforward
+mha_type=$1 # mha type
+lr=$2 # lr
+structure=$3 # structure
+max_length=$4 # max_length
+batch_size=$5 # batch_size
+gradient_accumulation_steps=$6 # gradient_accumulation_steps
+hourglass_downsampling_type=$7 # hourglass_downsampling_type
+hourglass_upsampling_type=$8 # hourglass_upsampling_type
+hourglass_attention_downsampling=$9 # hourglass_attention_downsampling
+hourglass_attention_upsampling=${10} # hourglass_attention_upsampling
+hourglass_upsampling_residual=${11} # hourglass_upsampling_residual
+hourglass_sampling_post_norm=${12} # hourglass_sampling_post_norm
+hourglass_sampling_use_linear=${13} # hourglass_sampling_use_linear
+hourglass_sampling_use_feedforward=${14} # hourglass_sampling_use_feedforward
 
 
 cosformer="cosformer"
@@ -37,20 +37,20 @@ poetry run python3 train_single_gpu.py \
  --criterion cross_entropy \
  --model decoder_only \
  --device cuda \
- --mha_type $param1 \
+ --mha_type $mha_type \
  --act_fun $act_fun \
- --structure $param3 \
- --max_length $param4 \
- --batch_size $param5 \
- --gradient_accumulation_steps $param6 \
+ --structure $structure \
+ --max_length $max_length \
+ --batch_size $batch_size \
+ --gradient_accumulation_steps $gradient_accumulation_steps \
  --epochs 1 \
- --init_lr $param2 \
+ --init_lr $lr \
  --tokenizer google/byt5-small \
- --hourglass_downsampling_type $param7 \
- --hourglass_upsampling_type $param8 \
- --hourglass_attention_downsampling $param9 \
- --hourglass_attention_upsampling $param10 \
- --hourglass_upsampling_residual $param11 \
- --hourglass_sampling_post_norm $param12 \
- --hourglass_sampling_use_linear $param13 \
- --hourglass_sampling_use_feedforward $param14
+ --hourglass_downsampling_type $hourglass_attention_downsampling \
+ --hourglass_upsampling_type $hourglass_upsampling_type \
+ --hourglass_attention_downsampling $hourglass_attention_downsampling \
+ --hourglass_attention_upsampling $hourglass_attention_upsampling \
+ --hourglass_upsampling_residual $hourglass_upsampling_residual \
+ --hourglass_sampling_post_norm $hourglass_sampling_post_norm \
+ --hourglass_sampling_use_linear $hourglass_sampling_use_linear \
+ --hourglass_sampling_use_feedforward $hourglass_sampling_use_feedforward
