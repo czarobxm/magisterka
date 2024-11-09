@@ -33,8 +33,6 @@ fi
 
 poetry run python3 train_single_gpu.py \
  --task sequence_modelling \
- --project $NEPTUNE_PROJECT \
- --api_token $NEPTUNE_API_TOKEN \
  --dataset enwik9  \
  --criterion cross_entropy \
  --model decoder_only \
