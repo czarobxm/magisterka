@@ -36,7 +36,7 @@ poetry run python3 train_single_gpu.py \
  --dataset enwik9  \
  --criterion cross_entropy \
  --model decoder_only \
- --device mps \
+ --device cuda \
  --mha_type $mha_type \
  --act_fun $act_fun \
  --structure $structure \
