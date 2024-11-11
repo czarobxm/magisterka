@@ -31,11 +31,6 @@ else
     act_fun="none"
 fi
 
-echo $structure
-echo $batch_size
-echo $hourglass_downsampling_type
-echo $hourglass_upsampling_type
-
 poetry run python3 train_single_gpu.py \
  --task sequence_modelling \
  --dataset enwik9  \
