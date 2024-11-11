@@ -31,12 +31,17 @@ else
     act_fun="none"
 fi
 
+echo $structure
+echo $batch_size
+echo $hourglass_downsampling_type
+echo $hourglass_upsampling_type
+
 poetry run python3 train_single_gpu.py \
  --task sequence_modelling \
  --dataset enwik9  \
  --criterion cross_entropy \
  --model decoder_only \
- --device cuda \
+ --device mps \
  --mha_type $mha_type \
  --act_fun $act_fun \
  --structure $structure \
@@ -46,7 +51,7 @@ poetry run python3 train_single_gpu.py \
  --epochs 1 \
  --init_lr $lr \
  --tokenizer google/byt5-small \
- --hourglass_downsampling_type $hourglass_attention_downsampling \
+ --hourglass_downsampling_type $hourglass_downsampling_type \
  --hourglass_upsampling_type $hourglass_upsampling_type \
  --hourglass_attention_downsampling $hourglass_attention_downsampling \
  --hourglass_attention_upsampling $hourglass_attention_upsampling \

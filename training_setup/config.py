@@ -60,12 +60,12 @@ DEFAULT_ARGS = {
     "device": "cuda",
     #
     # HOURGLASS PARAMETERS
-    "hourglass_downsampling_type": "avg",
+    "hourglass_downsampling_type": "linear",
     "hourglass_upsampling_type": "linear",
-    "hourglass_attention_downsampling": True,
-    "hourglass_attention_upsampling": True,
+    "hourglass_attention_downsampling": False,
+    "hourglass_attention_upsampling": False,
     "hourglass_upsampling_residual": True,
     "hourglass_sampling_post_norm": True,
     "hourglass_sampling_use_linear": True,
-    "hourglass_sampling_use_feedforward": True,
+    "hourglass_sampling_use_feedforward": False,
 }
