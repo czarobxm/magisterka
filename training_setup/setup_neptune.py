@@ -7,6 +7,8 @@ import neptune
 
 
 def setup_neptune(args: argparse.Namespace) -> neptune.Run:
+    if args.project is None or args.api_token is None:
+        raise ValueError("No project or API token provided for Neptune")
     run = neptune.init_run(
         project=args.project,
         api_token=args.api_token,
